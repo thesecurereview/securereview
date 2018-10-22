@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "gerrit",
-	"description": "Test",
+	"description": "SafeReview",
 	"version": "0.1",
 
 	"background": {
