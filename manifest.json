@@ -1,0 +1,28 @@
+{
+	"manifest_version": 2,
+	"name": "gerrit",
+	"description": "Test",
+	"version": "0.1",
+
+	"background": {
+		"persistent": false,
+		"scripts": ["background.js"]
+	},
+
+	"permissions":[
+		"tabs",
+		"storage",
+		"activeTab",
+		 "http://*/*",
+		 "https://*/*"
+	],
+
+	"browser_action": {
+		"default_popup": "popup.html"
+	},
+
+	"content_scripts": [{
+		"matches": ["http://*/*", "https://*/*"],
+		 "js": ["content.js"]
+	}]
+}
