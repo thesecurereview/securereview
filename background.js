@@ -1,60 +1,18 @@
+var url;
 
-//Prepare GET request
-function get_req(url, service, auth, callback){
+function getChangeInfo(url){
 
-	if (!url.endsWith('.git')) url += '.git'
 
-	let headers = {}
-	if (auth) {
-		headers['Authorization'] = basicAuth(auth)
-	}
-
-	url = `${url}/info/refs?service=${service}`
-	
-	request("GET", url, headers, function(res){
-		if (res.statusCode !== 200) {
-			throw new Error(
-			`HTTP Error: ${res.statusCode}`)
-		}
-		callback(
-			parseGETResponse(res.body)
-		)
-	})
 }
 
 
-//Prepare POST request
-function post_req(url, service, auth, wants, haves, callback){
+//sign the review, embed it into the change branch
+function sign_review(url){
 
-	if (!url.endsWith('.git')) url += '.git'
+	//changeInfo = getChangeInfo(url)
 
-	let headers = {}
-	headers['Content-Type'] = `application/x-${service}-request`
-	headers['Accept'] = `application/x-${service}-result`
+	url = "http://hmdfsn@localhost:8889/test_api.git"
 
-	url = `${url}/${service}`
-
-	/*create the pack stream*/
-	packstream = wantPackLine (wants, haves)
-
-	//concat the packstream
-	let conStream = concatStreamBuffer(packstream)
-
-	pifyRequest("POST", url, headers, conStream, function(res){
-
-		if (res.statusCode !== 200) {
-			throw new Error(`HTTP Error: ${res.statusCode}`)
-		}
-		//console.log(res.headers)
-		callback(parsePOSTResponse(res.body))
-	});
-	
-}
-
-
-function main(){
-	var url = "http://hmdfsn@localhost:8889/test_api.git"
-	//url = "https://github.com/fsnfsn/test_api.git"
 	let auth = {
 		username: authUsername,
 		password: authPassword
@@ -76,30 +34,41 @@ function main(){
 		})
 	})
 
-	//update the head of change branch
-
-
-	//submit the change
-
 }	
 
 
-function findValueByPrefix(object, prefix) {
-	for (var property in object) {
-		if (object.hasOwnProperty(property) && 
-			property.toString().includes(prefix)) {
-			return object[property];
-		}
-	}
+/*merge the change to the base branch*/
+function submit_change(){
+
 }
+
 
 //Event Listeners
 document.addEventListener('DOMContentLoaded', function () {
 
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+		var tab = tabs[0];
+		url = tab.url;
+		/*only works on web-based gerrit services 
+		if (url.indexOf(HOST_ADDR) == -1){
+			deactivated_message();
+			return;
+		}
 		
-		main();
+		else{ 
+-                       //find out the commit type and perform the commit
+			detect_commit_type();
+		}*/
+
 	});
+
+	/*sign the review*/
+	document.getElementById('sign_review').addEventListener(
+	'click', sign_review(url));
+
+	/*submit the change to the server*/
+	document.getElementById('submit_change').addEventListener(
+	'click', submit_change);
 
 
 });

@@ -130,8 +130,60 @@ function pifyRequest(method, url, headers, body, callback) {
 }
 
 
+//Prepare GET request
+function get_req(url, service, auth, callback){
 
-function parseGETResponse(data){
+	if (!url.endsWith('.git')) url += '.git'
+
+	let headers = {}
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
+
+	url = `${url}/info/refs?service=${service}`
+	
+	request("GET", url, headers, function(res){
+		if (res.statusCode !== 200) {
+			throw new Error(
+			`HTTP Error: ${res.statusCode}`)
+		}
+		callback(
+			parseGETResponse(res.body, service)
+		)
+	})
+}
+
+
+//Prepare POST request
+function post_req(url, service, auth, wants, haves, callback){
+
+	if (!url.endsWith('.git')) url += '.git'
+
+	let headers = {}
+	headers['Content-Type'] = `application/x-${service}-request`
+	headers['Accept'] = `application/x-${service}-result`
+
+	url = `${url}/${service}`
+
+	/*create the pack stream*/
+	packstream = wantPackLine (wants, haves)
+
+	//concat the packstream
+	let conStream = concatStreamBuffer(packstream)
+
+	pifyRequest("POST", url, headers, conStream, function(res){
+
+		/*if (res.statusCode !== 200) {
+			throw new Error(`HTTP Error: ${res.statusCode}`)
+		}*/
+		callback(parsePOSTResponse(res.body, service))
+	});
+	
+}
+
+
+//Parse GET response
+function parseGETResponse(data, service){
 
 	/*response lines
 	* 0: 001e# service=git-receive-pack"
@@ -173,85 +225,8 @@ function parseGETResponse(data){
 }
 
 
-//readableBuffer
-function rdb (data){
-	buffer = createBuffer(data)
-	return buffer.toString('2')
-}
-
-
-
-function b64DecodeUnicode(str) {
-	return (str.split('').map(function(c) {
-		//return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-		return '' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-	}).join(''));
-}
-
-var zeroPad = function(num) {
-    return "00000000".slice(String(num).length) + num
-}
-
-// Decode base64 (convert ascii to binary)
-var asciiToBinary = function(str) {
-	return str.replace(/[\s\S]/g, function(str) {
-		str = zeroPad(str.charCodeAt().toString(2));
-		return str
-	})
-}
-
-
-function asciiToChar (a) {return a.charCodeAt(0); }
-
-// Convert binary string to character-number array
-var charData = function(strData){
-	return strData.split('').map(function(x){return x.charCodeAt(0);});
-}
-
-function testPako(){
-	pako = getPako()
-
-	let data = { ping: "12345678" };
-
-	let json = JSON.stringify(data);
-	console.log(json);
-
-	let binStr = pako.deflate(json);
-	console.log(binStr);
-
-	let text = pako.inflate(binStr);
-	console.log(text);
-
-	console.log(String.fromCharCode.apply(null, text));
-
-}
-
-
-function hex_to_bytes(hex) {
-	var bytes = []
-	for (i = 0; i < hex.length; i+=2) {
-		var ch = parseInt(hex.substr(i, 2), 16);
-		bytes.push(ch); 
-	}
-	res = new Uint8Array(bytes);
-	return res.buffer;
-}
-
-
-function ab2str(buf) {
-	return String.fromCharCode.apply(null, new Uint16Array(buf));
-}
-
-function str2ab(str) {
-	var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-	var bufView = new Uint16Array(buf);
-	for (var i=0, strLen=str.length; i < strLen; i++) {
-		bufView[i] = str.charCodeAt(i);
-	}
-	return buf;
-}
-
-function parsePOSTResponse(data){
+//Parse GET response
+function parsePOSTResponse(data, service){
 	//https://stackoverflow.com/questions/14620769/decompress-gzip-and-zlib-string-in-javascript
 	//https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings/30106551
 	//http://shafiulazam.com/gitbook/7_the_packfile.html
@@ -370,6 +345,84 @@ function parsePOSTResponse(data){
 
 }
 
+
+//readableBuffer
+function rdb (data){
+	buffer = createBuffer(data)
+	return buffer.toString('2')
+}
+
+
+
+function b64DecodeUnicode(str) {
+	return (str.split('').map(function(c) {
+		//return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+		return '' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+	}).join(''));
+}
+
+var zeroPad = function(num) {
+    return "00000000".slice(String(num).length) + num
+}
+
+// Decode base64 (convert ascii to binary)
+var asciiToBinary = function(str) {
+	return str.replace(/[\s\S]/g, function(str) {
+		str = zeroPad(str.charCodeAt().toString(2));
+		return str
+	})
+}
+
+
+function asciiToChar (a) {return a.charCodeAt(0); }
+
+// Convert binary string to character-number array
+var charData = function(strData){
+	return strData.split('').map(function(x){return x.charCodeAt(0);});
+}
+
+function testPako(){
+	pako = getPako()
+
+	let data = { ping: "12345678" };
+
+	let json = JSON.stringify(data);
+	console.log(json);
+
+	let binStr = pako.deflate(json);
+	console.log(binStr);
+
+	let text = pako.inflate(binStr);
+	console.log(text);
+
+	console.log(String.fromCharCode.apply(null, text));
+
+}
+
+
+function hex_to_bytes(hex) {
+	var bytes = []
+	for (i = 0; i < hex.length; i+=2) {
+		var ch = parseInt(hex.substr(i, 2), 16);
+		bytes.push(ch); 
+	}
+	res = new Uint8Array(bytes);
+	return res.buffer;
+}
+
+
+function ab2str(buf) {
+	return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
+function str2ab(str) {
+	var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+	var bufView = new Uint16Array(buf);
+	for (var i=0, strLen=str.length; i < strLen; i++) {
+		bufView[i] = str.charCodeAt(i);
+	}
+	return buf;
+}
 
 
 
