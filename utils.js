@@ -1,11 +1,18 @@
 var pushService = 'git-receive-pack'
+var fetchService = 'git-upload-pack'
 var service = 'git-upload-pack'
-var authUsername= 'hmdfsn'
-var authPassword = "YGA8OuKqH8/szn5CsH/s7nW+aAoWrJPgXCrDBDywVw"
+
+var authUsername= 'hmd'
+var authEmail = 'hmdfsn@hotmail.com'
+var authPassword = "FZ0dOkZo0+dPmOw9GQVj+/14GbN9x9CHpWeenFOEig"
 //var authPassword = "zffQNE8Dgqqu6slT9afV+WLXEvCqKv/Obah2Mb1D0Q"
-var HOST_ADDR = "http://hmdfsn@localhost:8889/"
-var project = "test_api.git"
-var url = HOST_ADDR + project
+//var HOST_ADDR = "http://hmdfsn@localhost:8889"
+HOST_ADDR = "http://amir.home:8080/"
+
+var auth = {
+	username: authUsername,
+	password: authPassword
+}
 
 /*var authUsername= 'fsnfsn'
 var authPassword = "erva9731"*/
@@ -29,6 +36,5 @@ function findValueByPrefix(object, prefix) {
 		}
 	}
 }
-
 
 

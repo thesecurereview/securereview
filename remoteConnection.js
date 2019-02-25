@@ -130,10 +130,30 @@ function pifyRequest(method, url, headers, body, callback) {
 }
 
 
-//Prepare GET request
-function get_req(url, service, auth, callback){
+//GET request over an endpoint
+function get_endpoint(url, endpoint, auth, callback){
 
-	if (!url.endsWith('.git')) url += '.git'
+	let headers = {}
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
+
+	url = `${url}/${endpoint}`
+
+	request("GET", url, headers, function(res){
+		if (res.statusCode !== 200) {
+			throw new Error(
+			`HTTP Error: ${res.statusCode}`)
+		}
+
+		callback(res.body)
+	})
+
+}
+
+
+// GET request by service
+function get_req(url, service, auth, callback){
 
 	let headers = {}
 	if (auth) {
@@ -154,10 +174,8 @@ function get_req(url, service, auth, callback){
 }
 
 
-//Prepare POST request
+// POST request by service
 function post_req(url, service, auth, wants, haves, callback){
-
-	if (!url.endsWith('.git')) url += '.git'
 
 	let headers = {}
 	headers['Content-Type'] = `application/x-${service}-request`
@@ -182,8 +200,115 @@ function post_req(url, service, auth, wants, haves, callback){
 }
 
 
-//Parse GET response
+/**
+* Discover the server
+*/
+var discover = async function ({ service, repo_url, auth }, callback) {
+
+	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
+
+	let headers = {}
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
+	
+	//Send GET request
+	var data = request("GET", `${repo_url}/info/refs?service=${service}`, 
+		headers, function(res){
+
+		if (res.statusCode !== 200) {
+			throw new Error(
+			`HTTP Error: ${res.statusCode} ${res.statusMessage}`)
+		}
+
+		/*parse the response and then callback*/
+		console
+		callback (parseGETResponse(res.body, service))
+	});
+
+}
+
+
+
+/**
+* Send the pack file to the server
+*/
+var connect = async function (
+	{ service, repo_url, auth, stream }, callback) {
+
+	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
+
+	let headers = {}
+	headers['Content-Type'] = `application/x-${service}-request`
+	headers['Accept'] = `application/x-${service}-result`
+
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
+
+	let conStream = concatStreamBuffer(stream)
+
+	var data = pifyRequest("POST", `${repo_url}/${service}`, 
+		headers, conStream, function(res){
+
+		if (res.statusCode !== 200) {
+			throw new Error(`HTTP Error: `)//${res.statusCode} ${res.statusMessage}`)
+		}
+
+		/*parse the response and then callback*/
+		callback (res.body)
+	});
+
+}
+
+
+// Specific funciton to parse change info
+function parseChangeInfo (data){
+
+	//split it into lines
+	data = data.split("\n")
+
+	//remove the first and last line
+	data.shift()
+	data.pop()
+
+	//join array of lines
+	data = data.join("\n")
+	data = JSON.parse(data);
+	
+	return data
+}
+
+
+/**
+* Parse the final server's response
+*/
+var parseSendPackResult = function (response){
+
+	console.log(response);
+
+	/*FIXME check response lines
+	let lines = response.split('\n')
+
+	if (!line.startsWith('unpack ')) {
+		window.alert(line)
+	}*/
+
+	if (!response.includes('unpack ')) {
+		window.alert(line)
+	}
+	else{
+		//refresh the page If the unpack is ok
+		//refreshPage(file_name)
+	}
+
+}
+
+
+
+// Parse GET response
 function parseGETResponse(data, service){
+	//console.log(data)
 
 	/*response lines
 	* 0: 001e# service=git-receive-pack"
@@ -198,22 +323,34 @@ function parseGETResponse(data, service){
 	* remove the first and last line to get refs
 	*/
 	var lines = data.toString('utf8').trim().split('\n')
-	var resHead = lines.shift()
+
+	// Determine the service data
+	// FIXME: make it automatic
+	var server = "Gerrit" 
+	var resHead;
+
+	if (server == "Github")
+		resHead = lines.shift()
+	else if (server == "Gerrit")
+		resHead = lines[0]
+
+
 	if (! (resHead.toString('utf8').includes(`service=${service}`)) ) {
 		throw new Error(
 			`Expected '# service=${service}\\n' 
 			but got '${resHead.toString('utf8')}'`
 		)
 	}
-	lines.pop()
 
-	const refs = new Map()
+	//remvove the first line with is service info
+	lines.shift()
 
 	let [refLine, capLine] = lines[0].split('\0')
 	var capabilities = capLine.split(' ')
 
-	//remove the caps from the first line
+	// Map over refs
 	lines[0] = refLine
+	const refs = new Map()
 	for (let line of lines) {
 		let [ref, name] = line.split(' ')
 		//remove the length from the beginning
@@ -225,7 +362,7 @@ function parseGETResponse(data, service){
 }
 
 
-//Parse GET response
+// Parse GET response
 function parsePOSTResponse(data, service){
 	//https://stackoverflow.com/questions/14620769/decompress-gzip-and-zlib-string-in-javascript
 	//https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings/30106551
@@ -425,4 +562,24 @@ function str2ab(str) {
 }
 
 
+function saveFile(dat){
+$http({
+    url: 'your/webservice',
+    method: 'POST',
+    responseType: 'arraybuffer',
+    data: json, //this is your json data string
+    headers: {
+        'Content-type': 'application/json',
+        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+}).success(function(data){
+    var blob = new Blob([data], {
+        type: `application/x-${service}-request`
+    });
+    saveAs(blob, 'testPack' + '.pack');
+}).error(function(){
+    //Some error log
+});
+
+}
 

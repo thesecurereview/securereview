@@ -14,3 +14,13 @@ changeIdDiv = "com-google-gerrit-client-change-CommitBox_BinderImpl_GenCss_style
 span= "com-google-gwtexpui-clippy-client-ClippyCss-label"
 
 
+chrome.runtime.onMessage.addListener(
+function(message, sender, sendResponse) {
+
+/*reading info from reg commit*/
+	if (message.indicator == "url_info")
+	{
+		var url = document.URL;
+		sendResponse({"url":url})
+     	}
+});
