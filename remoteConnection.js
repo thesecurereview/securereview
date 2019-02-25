@@ -151,6 +151,32 @@ function get_endpoint(url, endpoint, auth, callback){
 
 }
 
+//GET request over an endpoint
+function post_endpoint(url, endpoint, auth, data, callback){
+
+	let headers = {}
+	headers['Accept'] = `application/json`
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
+
+	url = `${url}/${endpoint}`
+	console.log(url)
+
+	/*data = {
+		"message": data
+	}*/
+
+	pifyRequest("PUT", url, headers, data, function(res){
+
+		/*if (res.statusCode !== 200) {
+			throw new Error(`HTTP Error: ${res.statusCode}`)
+		}*/
+		callback(res.body)
+	});
+
+}
+
 
 // GET request by service
 function get_req(url, service, auth, callback){
@@ -180,6 +206,10 @@ function post_req(url, service, auth, wants, haves, callback){
 	let headers = {}
 	headers['Content-Type'] = `application/x-${service}-request`
 	headers['Accept'] = `application/x-${service}-result`
+
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
 
 	url = `${url}/${service}`
 
@@ -214,7 +244,7 @@ var discover = async function ({ service, repo_url, auth }, callback) {
 	}
 	
 	//Send GET request
-	var data = request("GET", `${repo_url}/info/refs?service=${service}`, 
+	request("GET", `${repo_url}/info/refs?service=${service}`, 
 		headers, function(res){
 
 		if (res.statusCode !== 200) {
@@ -248,7 +278,7 @@ var connect = async function (
 
 	let conStream = concatStreamBuffer(stream)
 
-	var data = pifyRequest("POST", `${repo_url}/${service}`, 
+	pifyRequest("POST", `${repo_url}/${service}`, 
 		headers, conStream, function(res){
 
 		if (res.statusCode !== 200) {
@@ -308,12 +338,13 @@ var parseSendPackResult = function (response){
 
 // Parse GET response
 function parseGETResponse(data, service){
-	console.log(service, data)
 
 	/*response lines
-	* 0: 001e# service=git-receive-pack"
-	" 1: SHA1 REF1\0CAPS"
-	" 2: SHA1 REF2"
+	* 0: <Length># service=git-receive-pack"
+	" 1: <Length>SHA1 REF\0CAPS"
+	" 2: <Length>SHA1 REF1"
+	" 3: <Length>SHA1 REF2"
+	" 4: <Length>SHA1 REF3"
 	" ..."
 	" n: 0000"
 	*/
@@ -325,7 +356,7 @@ function parseGETResponse(data, service){
 	var lines = data.toString('utf8').trim().split('\n')
 
 	// Determine the service data
-	// FIXME: make it automatic
+	/*/ FIXME: make it automatic
 	var server = "Gerrit" 
 	var resHead;
 
@@ -333,8 +364,10 @@ function parseGETResponse(data, service){
 		resHead = lines.shift()
 	else if (server == "Gerrit")
 		resHead = lines[0]
+	*/
 
-
+	// Check the first line: service info
+	var resHead = lines.shift()
 	if (! (resHead.toString('utf8').includes(`service=${service}`)) ) {
 		throw new Error(
 			`Expected '# service=${service}\\n' 
@@ -342,14 +375,18 @@ function parseGETResponse(data, service){
 		)
 	}
 
-	//remvove the first line with is service info
-	lines.shift()
-
+	//Remove the last line (0000
+	lines.pop()
+	
 	let [refLine, capLine] = lines[0].split('\0')
 	var capabilities = capLine.split(' ')
+	//remove the first empty element, FIXME: check it for GitHub
+	capabilities.shift()
+
+	//remove caps from the first line
+	lines[0] = refLine
 
 	// Map over refs
-	lines[0] = refLine
 	const refs = new Map()
 	for (let line of lines) {
 		let [ref, name] = line.split(' ')
@@ -364,11 +401,6 @@ function parseGETResponse(data, service){
 
 // Parse GET response
 function parsePOSTResponse(data, service){
-	//https://stackoverflow.com/questions/14620769/decompress-gzip-and-zlib-string-in-javascript
-	//https://stackoverflow.com/questions/30106476/using-javascripts-atob-to-decode-base64-doesnt-properly-decode-utf-8-strings/30106551
-	//http://shafiulazam.com/gitbook/7_the_packfile.html
-	//http://shafiulazam.com/gitbook/7_transfer_protocols.html
-
 
 	/*response lines
 	* 0: 008NAK\n"
@@ -414,71 +446,6 @@ function parsePOSTResponse(data, service){
 	pako = getPako()
 	data = pako.inflate(data, { raw: true});
 	console.log(data)
-
-
-/*
-
-
-	
-	//convert ascii to hex, hex to binary
-	//data = asciiToBinary (data)
-	data = charData(data)
-
-	data = createBuffer(data)
-	data = data.toString('hex')
-	data = hex_to_bytes(data)
-
-	//convert binary to char
-	data = data.split('').map(function(x){return x.charCodeAt(0);});
-	console.log(data)
-
-	//convert ascii to hex, and then byte array
-	data = createBuffer(data)
-	data = data.toString('hex')
-	data = hex_to_bytes(data)
-
-	//pako magic
-	pako = getPako()
-	data = pako.deflateRaw(data)
-	data = String.fromCharCode.apply(null, new Uint16Array(data));
-	data = createBuffer(data)
-	data = data.toString('utf8')
-
-	var lines = data.toString('utf8').trim().split('\n')
-	lines.shift() 
-
-
-	//base64decode
-	data = b64DecodeUnicode (data)
-	console.log(data)
-	data = encodeURIComponent(data); 
-	*/
-
-	/*
-	//data stream	
-	buffer = createBuffer(data)
-	console.log(buffer.toString())
-	let read = packLineStreamReader(data)
-	console.log(read)
-
-	//passthrough stream reader
-	let packfile = getStream()
-	const nextBit = async function (line) {
-
-		// Skip over flush packets
-		if (line === null) return nextBit()
-		// A made up convention to signal there's no more to read.
-		if (line === true) {
-			packfile.end()
-			return
-		}
-		packfile.write(line)
-	}
-
-	for (let line of lines) {
-		nextBit	(line)
-	}
-	*/
 
 }
 

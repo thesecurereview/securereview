@@ -7,7 +7,8 @@ var authUsername= 'hmd'
 var authEmail = 'hmdfsn@hotmail.com'
 var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ"
 //var HOST_ADDR = "http://hmdfsn@localhost:8889"
-HOST_ADDR = "http://localhost:8080"
+var HOST_ADDR = "http://localhost:8080"
+var PUT_URL = "http://hmd@localhost:8080/a"
 
 var auth = {
 	username: authUsername,

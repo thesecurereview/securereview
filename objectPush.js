@@ -54,7 +54,7 @@ function wantPackLine (wants, haves){
 
 /* Send the pack file via browser*/
 var sendPackLine = function (
-	repo_url, auth, baseBranch, 
+	repo_url, auth, changeNumber, 
 	newHead, oldHead, objects, callback){ 
 
 	/*discover the remote server*/
@@ -65,23 +65,26 @@ var sendPackLine = function (
 	}, function (response) {
 
 		let {capabilities, refs} = response
+		// FIXME use server's capabilities and refs
 
-		//FIXME use capabilities
-		// Get server capabilities
-		capabilities = capabilities.slice(-1)[0].split('/')[1].split('-')
+		// If no 'side-band' capability was specified, the server will stream the
+		// entire packfile without multiplexing.
 		const caps = "report-status side-band-64k"
 
-		//get head of the base branch
-		//FIXME: Make it automatic 
-		/*For Github
-		let ref = `refs/heads/${baseBranch}`
-		oldHead = refs.get(ref)*/
-		
+		let ref;
+		//FIXME: Make it automatic For Github and Gerrit
+		/*For Github:
+		ref = `refs/heads/${baseBranch}`
+		oldHead = refs.get(ref)
+		*/
 
-		// FIXME For Gerrit: baseBranch=change-Id
-		let ref = `refs/heads/ref/changes/${baseBranch}`
-		ref = `refs/changes/99/299`
-		//console.log(`${oldHead} ${newHead} ${ref}\0 ${caps}`)
+		/*For Gerrit:
+		//FIXME: form the change ref to update
+		ref = `refs/heads/ref/changes/${changeNumber}`
+		ref = `refs/for/${changeNumber}`
+		ref = `refs/changes/01/1/2`
+		*/
+		ref = `refs/changes/01`
 
 		// Write header of the pack file
 		let packstream = getStream()

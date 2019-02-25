@@ -10,6 +10,7 @@
 var url;
 var repo_url;
 var objects = [];
+var revisions_info;
 
 
 // Extract the review information: comments, score
@@ -172,7 +173,7 @@ function createSignedCommit(commitInfo, callback){
 
 
 //Push commit to the server
-function pushCommit(targetBranch, oldHead, commit){
+function pushCommit(changeNumber, oldHead, commit){
 
 	//create new signed commit
 	var type = "commit";
@@ -181,26 +182,63 @@ function pushCommit(targetBranch, oldHead, commit){
 
 	objects.push([type, obj.object]);
 
-	//call send-pack process and then parse the server response
-	/*/ targetBranch = change_number taken from URL
-	sendPackLine(repo_url, auth, targetBranch, 
+	//call send-pack process to update the change branch
+	sendPackLine(repo_url, auth, changeNumber, 
 		newHead, oldHead, objects, 
 		function(result){ 
+			console.log(result)
 			//parseSendPackResult (result)
 		}
-	);*/
+	);
 
 }
 
+
+//create a new commit and push to the server
+function updateChangeBranch(oldHead, author, parents, 
+		changeNumber, commitMessage){
+	//get the tree_hash, 
+	getTreeHash (oldHead, parents[0], function(tree_hash){
+
+		//Create a new signed 
+		createSignedCommit({
+			treeHash: tree_hash,
+			parents:parents,
+			author:author,  
+			commitMessage:commitMessage
+		}, function (signedCommit){
+			//push the commit to the server
+			pushCommit (changeNumber, oldHead, signedCommit)
+		});
+
+	});
+}
+
+
+function updateCommitMessage (change_id, 
+		changeNumber, commitMessage){
+
+	// update the commit message
+	var endpoint = "changes/" + change_id + "/edit:message"
+	console.log(endpoint)
+	post_endpoint(PUT_URL, endpoint, auth, 
+		commitMessage, function (result){ 
+		console.log(result)
+		//callback (parseChangeInfo(result))
+	})
+
+	// publish the update
+	endpoint = "changes/" + change_id + "/edit:publish"
+
+
+}
 
 // Run the signing review by getting the basic info about the change
 function run(){
 
 	getChangeSummary(url, function(result){
 
-		//We are going to update
-		//refs/heads/ref/changes/changeNumber
-		var targetBranch = result._number
+		var changeNumber = result._number
 
 		var project = result.project
 		var change_id = result.change_id
@@ -208,10 +246,11 @@ function run(){
 		// Form repo URL
 		repo_url = HOST_ADDR + "/" + project
 
-		/* Get all info about the change
+		// Get all info about the change
 		getChangeInfo(change_id, function(result){
-			console.log(result)
-		});*/
+			let change_head = result.current_revision
+			revisions_info = result.revisions[change_head]
+		});
 
 		// get commit info about change branch
 		getCommitInfo(change_id, function(commitInfo){
@@ -233,24 +272,20 @@ function run(){
 
 			// store signed review in the change branch
 			storeSignedReview (change_id, commitMessage, function(result){
+
 				//update the commit message with the new one
 				commitMessage = result
 
-				//get the tree_hash, create a new commit and push to the server
-				getTreeHash (oldHead, parents[0], function(tree_hash){
+				// FIXME: How to update the change
+				// 1- Update the change branch by pushing a new signed commit
+				// 2- Update the commit message using API
 
-					//Create a new signed 
-					createSignedCommit({
-						treeHash: tree_hash,
-						parents:parents,
-						author:author,  
-						commitMessage:commitMessage
-					}, function (signedCommit){
-						//push the commit to the server
-						pushCommit (targetBranch, oldHead, signedCommit)
-					});
+				// The first approach complains about missing tree
+				/*updateChangeBranch(oldHead, author, parents, 
+					changeNumber, commitMessage)*/
 
-				});
+				// Let's try the 2nd one for now	
+				updateCommitMessage (change_id, changeNumber, commitMessage)
 
 			})
 		});
