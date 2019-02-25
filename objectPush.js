@@ -54,7 +54,8 @@ function wantPackLine (wants, haves){
 
 /* Send the pack file via browser*/
 var sendPackLine = function (
-	repo_url, auth, baseBranch, newHead, oldHead, objects, callback){ 
+	repo_url, auth, baseBranch, 
+	newHead, oldHead, objects, callback){ 
 
 	/*discover the remote server*/
 	let res = discover({
@@ -74,8 +75,8 @@ var sendPackLine = function (
 		//FIXME: Make it automatic 
 		/*For Github
 		let ref = `refs/heads/${baseBranch}`
-		oldHead = refs.get(ref)
-		*/
+		oldHead = refs.get(ref)*/
+		
 
 		// FIXME For Gerrit: baseBranch=change-Id
 		let ref = `refs/heads/ref/changes/${baseBranch}`

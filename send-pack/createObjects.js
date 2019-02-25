@@ -53,7 +53,6 @@ function createGitObject(type, content){
 	- 120000: A symbolic link
 	*/
 
-
 	/*normalize the blob content*/
 	if (type == "blob")
 		content = normalize(content)
@@ -97,7 +96,7 @@ function getObjectHash(object_wrap){
 /**
 * create the commit object
 */
-function formCommit(tree_hash, author, parents, message){
+function formCommit(treeHash, author, parents, message){
 
 	let authorDateTime = new Date()
 	let timestamp = Math.floor(authorDateTime.valueOf() / 1000)
@@ -111,7 +110,7 @@ function formCommit(tree_hash, author, parents, message){
 
 	/* construct the commit*/
 	let commit = {
-		tree: tree_hash,
+		tree: treeHash,
 		parent: parents,
 		author: {
 			name: author.name,

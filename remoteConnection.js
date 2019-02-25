@@ -208,6 +208,7 @@ var discover = async function ({ service, repo_url, auth }, callback) {
 	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
 
 	let headers = {}
+	//FIXME Add OAuth
 	if (auth) {
 		headers['Authorization'] = basicAuth(auth)
 	}
@@ -222,7 +223,6 @@ var discover = async function ({ service, repo_url, auth }, callback) {
 		}
 
 		/*parse the response and then callback*/
-		console
 		callback (parseGETResponse(res.body, service))
 	});
 
@@ -308,7 +308,7 @@ var parseSendPackResult = function (response){
 
 // Parse GET response
 function parseGETResponse(data, service){
-	//console.log(data)
+	console.log(service, data)
 
 	/*response lines
 	* 0: 001e# service=git-receive-pack"

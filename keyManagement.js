@@ -353,8 +353,8 @@ var store_key = function (parsedKey, privkey) {
 	* clear_all();
 	*/
 
-	/*FIXME: For the porpuse of the user_study we assume a id*/
-	var store_id = "le-git-imate";
+	/*FIXME: For the porpuse of the prototype we assume a id*/
+	var store_id = "safereview";
 
 	/*remove the key if it is already stored*/
 	remove_obj (store_id).then(function(result){
@@ -503,8 +503,8 @@ var clear_all = function() {
  */
 function signMessage (user_id, data, callback){
 
-	/*FIXME: For the porpuse of the user_study we assume this id*/
-	var user_id = "le-git-imate";
+	/*FIXME: For the porpuse of the prototype we assume a id*/
+	var user_id = "safereview";
 	
 	/* Load the key form local storage */
 	var key_info = [];

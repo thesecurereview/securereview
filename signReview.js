@@ -9,7 +9,7 @@
 
 var url;
 var repo_url;
-var objects= [];
+var objects = [];
 
 
 // Extract the review information: comments, score
@@ -108,9 +108,7 @@ function fetchObjects(repo_url, wants, haves, callback){
 // Store review in the change branch
 function getTreeHash(head, parent, callback){
 
-		
-	// Fetch objects
-	/* FIXME: Double check with UI info to make sure ...
+	/* FIXME: 
 	 Assume we have the parent, and want the head
 	 Assume wants = head, haves=parent
 
@@ -118,16 +116,15 @@ function getTreeHash(head, parent, callback){
 	haves = ["5087ff36f724487f77025a497b243ab6b8862c10"]
 	*/
 
-	// Pass the head and parent as an array	
+	/*/ Pass the head and parent as an array	
 	fetchObjects(repo_url, [head], [parent], function(result){
-		console.log(result)
-
 		// FIXME: decompress packfile to extract tree hash
-		//tree_hash = extract_commit_info(result)	
+		console.log(result)
+		tree_hash = extract_commit_info(result)	
 
-	});
+	});*/
 
-	callback ("23cf7ae194f3577a2ad92fe6468b7df1d9638121")
+	callback ("0764860a8e2f95435823440264486a3a99f6eb6d")
 }
 
 
@@ -143,13 +140,11 @@ function storeSignedReview (change_id, commitMessage, callback){
 
 	// Sign review
 	signMessage(authUsername, reviewUnit, function(result){
-		//console.log(result)
 
 		//Embed signed reviewUnit in commitMessage
 		commitMessage = embedReviewUnit(
 				change_id, commitMessage, result);
 
-		//console.log(commitMessage)
 		callback(commitMessage);
 	});
 }
@@ -158,7 +153,7 @@ function storeSignedReview (change_id, commitMessage, callback){
 function createSignedCommit(commitInfo, callback){
 
 	// Form the commit 	
-	var commit = formCommit(commitInfo.tree_hash, commitInfo.author, 
+	var commit = formCommit(commitInfo.treeHash, commitInfo.author, 
 		commitInfo.parents, commitInfo.commitMessage)
 
 	// Sing the commit and then form signed commit
@@ -188,8 +183,11 @@ function pushCommit(targetBranch, oldHead, commit){
 
 	//call send-pack process and then parse the server response
 	/*/ targetBranch = change_number taken from URL
-	sendPackLine(repo_url, auth, targetBranch, newHead, oldHead, objects, 
-		function(result){ parseSendPackResult (result)}
+	sendPackLine(repo_url, auth, targetBranch, 
+		newHead, oldHead, objects, 
+		function(result){ 
+			//parseSendPackResult (result)
+		}
 	);*/
 
 }
@@ -217,7 +215,6 @@ function run(){
 
 		// get commit info about change branch
 		getCommitInfo(change_id, function(commitInfo){
-			//console.log(result)
 
 			//target branch if we merge to master branch
 			//var targetBranch = result.branch
@@ -267,7 +264,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		url = tabs[0].url;
-		//console.log(url)
 	});
 
 	/*sign the review*/
