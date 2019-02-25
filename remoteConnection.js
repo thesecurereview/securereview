@@ -151,8 +151,9 @@ function get_endpoint(url, endpoint, auth, callback){
 
 }
 
-//GET request over an endpoint
-function post_endpoint(url, endpoint, auth, data, callback){
+//PUT/POST request over an endpoint
+function post_endpoint(method, url, endpoint, auth, 
+		data, callback){
 
 	let headers = {}
 	headers['Accept'] = `application/json`
@@ -161,18 +162,13 @@ function post_endpoint(url, endpoint, auth, data, callback){
 	}
 
 	url = `${url}/${endpoint}`
-	console.log(url)
 
 	/*data = {
 		"message": data
 	}*/
 
-	pifyRequest("PUT", url, headers, data, function(res){
-
-		/*if (res.statusCode !== 200) {
-			throw new Error(`HTTP Error: ${res.statusCode}`)
-		}*/
-		callback(res.body)
+	pifyRequest(method, url, headers, data, function(res){
+		callback(res)
 	});
 
 }
@@ -447,6 +443,32 @@ function parsePOSTResponse(data, service){
 	data = pako.inflate(data, { raw: true});
 	console.log(data)
 
+}
+
+
+function parseMSGResponse(method, res){
+
+	console.log(method, res)
+	if (method == "PUT"){
+		// Check for 204 No Content success code
+		if (res.statusCode == 204) {
+			return true
+		}
+		/*else
+			//FIXME raise a better error
+			return throw new Error(`The commit message is not updated`)
+		*/
+	}
+	if (method == "POST"){
+		// Check for 204 No Content success code
+		if (res.statusCode == 204) {
+			return refreshPage(url)
+		}
+		/*else
+			//FIXME raise a better error
+			return throw new Error(`The updated message is not published`)
+		*/
+	}
 }
 
 

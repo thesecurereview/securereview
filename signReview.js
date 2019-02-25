@@ -220,16 +220,22 @@ function updateCommitMessage (change_id,
 
 	// update the commit message
 	var endpoint = "changes/" + change_id + "/edit:message"
-	console.log(endpoint)
-	post_endpoint(PUT_URL, endpoint, auth, 
-		commitMessage, function (result){ 
-		console.log(result)
-		//callback (parseChangeInfo(result))
+	var method = "PUT"
+	post_endpoint(method, PUT_URL, endpoint, auth, commitMessage, 
+		function (result){ 
+		// FIXME Parse response as an if condition
+		parseMSGResponse(method, result)
+
+		// publish the update
+		endpoint = "changes/" + change_id + "/edit:publish"
+		method = "POST"
+		post_endpoint("POST", PUT_URL, endpoint, auth, null,
+			function (result){ 
+			// FIXME Parse response as an if condition
+			parseMSGResponse(method, result)
+		})
+
 	})
-
-	// publish the update
-	endpoint = "changes/" + change_id + "/edit:publish"
-
 
 }
 
