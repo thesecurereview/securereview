@@ -167,53 +167,6 @@ function formCommitHeaders (obj) {
 
 
 /**
-* Create a review unit as follows
-	<change_id>
-	<review score>
-	<reviewer’s comments>
-	<reviewer's name> <reviewer's e-mail> <timestamp>
-*/
-function formReviewUnit (change_id, review){
-
-	var timestamp, timezoneOffset;
-	[timestamp, timezoneOffset] = determineTime()		
-
-	let reviewUnit = ''
-	reviewUnit += `changeId ${change_id}\n`
-	reviewUnit += `score ${review.score}\n`
-	// TODO: Disscus it to make sure if ok no to have comments
-	//reviewUnit += `comments ${normalizeText(review.comments)}\n`
-	reviewUnit += `reviewer ${authUsername} <${authEmail}> ${timestamp} ${
-				formatTimezoneOffset(timezoneOffset)}\n`
-	
-	return reviewUnit
-}
-
-
-
-/**
-* Embed the signed review in the commitMessage
-*/
-function embedReviewUnit(change_id, commitMessage, reviewUnit){
-
-	//TODO find a better approach
-	// - Replace the Change-Id with Signed Review
-	// - Add the change id
-
-	var cidKey = "Change-Id:"
-	var idx = commitMessage.lastIndexOf(cidKey);	
-	var lasLine = commitMessage.substring(idx, idx+52);
-
-	// Remove the last two lines
-	commitMessage = commitMessage.substring(0, idx-1);
-
-	// - Amend the commit message with reviewUnit
-	// - Add the change_id  
-	return commitMessage + `${reviewUnit}\n${lasLine}\n`
-}
-
-
-/**
 * Form a signed commit
 */
 function formSignedCommit(commit, signature){

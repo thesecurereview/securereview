@@ -69,7 +69,7 @@ var sendPackLine = function (
 
 		// If no 'side-band' capability was specified, the server will stream the
 		// entire packfile without multiplexing.
-		const caps = "report-status side-band-64k"
+		const caps = "report-status side-band-64k no-thin"
 
 		let ref;
 		//FIXME: Make it automatic For Github and Gerrit
@@ -84,7 +84,7 @@ var sendPackLine = function (
 		ref = `refs/for/${changeNumber}`
 		ref = `refs/changes/01/1/2`
 		*/
-		ref = `refs/changes/01`
+		ref = `refs/heads/changes/01`
 
 		// Write header of the pack file
 		let packstream = getStream()

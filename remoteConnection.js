@@ -63,7 +63,7 @@ function pifyRequest(method, url, headers, body, callback) {
 	return new Promise(function(resolve, reject) {
 		var xhr = new XMLHttpRequest();
 
-		xhr.onload = function() {
+		/*xhr.onload = function() {
 			var status = xhr.status;
 
 			var type = xhr.getResponseHeader('content-type') || '';
@@ -91,7 +91,7 @@ function pifyRequest(method, url, headers, body, callback) {
 			};
 
 			resolve(options);	
-		};
+		};*/
 
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState !== 4) return;
@@ -156,16 +156,36 @@ function post_endpoint(method, url, endpoint, auth,
 		data, callback){
 
 	let headers = {}
-	headers['Accept'] = `application/json`
 	if (auth) {
 		headers['Authorization'] = basicAuth(auth)
 	}
+	headers['Accept'] = `application/json`
 
 	url = `${url}/${endpoint}`
 
-	/*data = {
-		"message": data
-	}*/
+	pifyRequest(method, url, headers, data, function(res){
+		callback(res)
+	});
+
+}
+
+//PUT/POST request over an endpoint
+function post_review_endpoint(method, url, endpoint, auth, 
+		data, callback){
+
+	let headers = {}
+	if (auth) {
+		headers['Authorization'] = basicAuth(auth)
+	}
+	headers['Accept'] = `application/json`
+	headers['Content-Type'] = `application/json;charset=UTF-8`
+	/*if (data instanceof FormData){
+		headers['Content-type'] = `application/x-www-form-urlencoded`
+	}
+	else
+		headers['Content-Type'] = `application/json`*/
+
+	url = `${url}/${endpoint}`
 
 	pifyRequest(method, url, headers, data, function(res){
 		callback(res)

@@ -4,7 +4,7 @@ var service = 'git-upload-pack'
 
 //FIXME determine the following info from the user or if possible from the URL 
 var authUsername= 'hmd'
-var authEmail = 'hmdfsn@hotmail.com'
+var authEmail = 'hammad.afzali@gmail.com'
 var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ"
 //var HOST_ADDR = "http://hmdfsn@localhost:8889"
 var HOST_ADDR = "http://localhost:8080"
