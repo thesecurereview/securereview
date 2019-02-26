@@ -218,6 +218,8 @@ function updateChangeBranch(oldHead, author, parents,
 function updateCommitMessage (change_id, 
 		changeNumber, commitMessage){
 
+	//FIXME update the UI with the given scores
+
 	// update the commit message
 	var endpoint = "changes/" + change_id + "/edit:message"
 	var method = "PUT"
@@ -237,6 +239,16 @@ function updateCommitMessage (change_id,
 
 	})
 
+}
+
+
+function setReviewed(change_id){
+	endpoint = "changes/" + change_id + "/unreviewed"
+	post_endpoint("PUT", PUT_URL, endpoint, auth, null,
+		function (result){ 
+		// FIXME Parse response as an if condition
+		console.log(result)
+	})
 }
 
 // Run the signing review by getting the basic info about the change
@@ -292,6 +304,7 @@ function run(){
 
 				// Let's try the 2nd one for now	
 				updateCommitMessage (change_id, changeNumber, commitMessage)
+				//setReviewed(change_id)
 
 			})
 		});

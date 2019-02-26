@@ -448,7 +448,6 @@ function parsePOSTResponse(data, service){
 
 function parseMSGResponse(method, res){
 
-	console.log(method, res)
 	if (method == "PUT"){
 		// Check for 204 No Content success code
 		if (res.statusCode == 204) {

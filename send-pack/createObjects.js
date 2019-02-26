@@ -196,18 +196,19 @@ function formReviewUnit (change_id, review){
 */
 function embedReviewUnit(change_id, commitMessage, reviewUnit){
 
-	// First replace the Change-Id with Signed Review
-	// Then add the change id
-
 	//TODO find a better approach
+	// - Replace the Change-Id with Signed Review
+	// - Add the change id
+
 	var cidKey = "Change-Id:"
 	var idx = commitMessage.lastIndexOf(cidKey);	
 	var lasLine = commitMessage.substring(idx, idx+52);
 
-	//remove the last two lines
+	// Remove the last two lines
 	commitMessage = commitMessage.substring(0, idx-1);
 
-	//Amend the commit message with reviewUnit and then add the change_id  
+	// - Amend the commit message with reviewUnit
+	// - Add the change_id  
 	return commitMessage + `${reviewUnit}\n${lasLine}\n`
 }
 
