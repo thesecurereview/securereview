@@ -1,58 +1,65 @@
-<head>
-	<title>Keybase Login</title>
-	<!--meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"-->
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Submit Change</title>
 
-	<script src='./submitChange.js'></script>
+		<script src='./submitChange.js'></script>
 
-	<script src='./objectPush.js'></script>
-	<script src='./objectFetch.js'></script>
-	<script src='./utils.js'></script>
-	<script src='./remoteConnection.js'></script>
-	<script src='./bundleStream.js'></script>
-	<script src='./bundlePackLine.js'></script>
-	<script src='./bundleObject.js'></script>
+		<script src='./utils/connections.js'></script>
+		<script src='./utils/objectCreate.js'></script>
+		<script src='./utils/objectPush.js'></script>
+		<script src='./utils/objectFetch.js'></script>
+		<script src='./utils/pageRefresh.js'></script>
+		<script src='./utils/utils.js'></script>
 
-	<meta charset="utf-8">
-	<!--link rel="stylesheet" href="css/popup.css">
-	<link rel="stylesheet" href="css/sitewide-css.css">
-	<link rel="stylesheet" href="bootstrap/css/bootstrap.css"-->
-	<title>SafeReview</title>
+		<script src='./libs/bundleStream.js'></script>
+		<script src='./libs/bundlePackLine.js'></script>
+		<script src='./libs/bundleObject.js'></script>
+		<script src="./libs/openpgp.js"></script>
+		<script src="./libs/sha1.js"></script>
 
-</head>
+		<meta charset="utf-8">
+		<!--link rel="stylesheet" href="css/popup.css">
+		<link rel="stylesheet" href="css/sitewide-css.css">
+		<link rel="stylesheet" href="css/bootstrap/css/bootstrap.css"-->
+		<title>SafeReview</title>
 
-<body class="modal-open" style="padding-right: 15px;">
+	</head>
 
-		<div id="popup"> 
-			<div class="form-group">
-				<label id="title-bar" class="control-label" for="parent_info" >Parent Commit</label>
-				<div class="col-md-4">                     
-					<textarea class="form-control" style="width: 510px; height: 100px;" id="parent_info" name="parent_info" spellcheck="false"></textarea>
+	<body class="modal-open" style="padding-right: 15px;">
+
+			<div id="popup"> 
+				<div class="form-group">
+					<label id="title-bar" class="control-label" for="parent_info" >Parent Commit</label>
+					<div class="col-md-4">                     
+						<textarea class="form-control" style="width: 510px; height: 100px;" id="parent_info" name="parent_info" spellcheck="false"></textarea>
+						<br>
+					</div>
+
+					<!--label id="title-bar" class="control-label" for="new_changes" >Changes</label-->
+					<div id="diffoutput" > </div>
 					<br>
+
+					<label id="title-bar" class="control-label" for="commit-msg" >Singed Commit</label>
+					<div class="col-md-4">                     
+						<textarea class="form-control" style="width: 510px; height: 130px;" id="commit-msg" name="commit-msg" spellcheck="false"></textarea>
+						<br>
+					</div>
+
+		
+					<!--button id='generate_sing'>Generate & Sign</button-->
+					<button id='merge_change' ><b>Submit Change</b></button>
+
+					<div class="form-group" style="text-align: right;clear:left;">
+						<a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
+
+						<a class="btn btn-primary btn-sm"  href="settings.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
+					</div>
 				</div>
 
-				<!--label id="title-bar" class="control-label" for="new_changes" >Changes</label-->
-				<div id="diffoutput" > </div>
-				<br>
 
-				<label id="title-bar" class="control-label" for="commit-msg" >Singed Commit</label>
-				<div class="col-md-4">                     
-					<textarea class="form-control" style="width: 510px; height: 130px;" id="commit-msg" name="commit-msg" spellcheck="false"></textarea>
-					<br>
-				</div>
-
-	
-			        <!--button id='generate_sing'>Generate & Sign</button-->
-				<button id='merge_change' ><b>Submit Change</b></button>
-
-				<div class="form-group" style="text-align: right;clear:left;">
-					<a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
-
-					<a class="btn btn-primary btn-sm"  href="settings.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
-				</div>
 			</div>
 
+	</body>
 
-		</div>
-
-
-</body>
+</html>
