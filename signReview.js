@@ -192,8 +192,10 @@ function amendChangeBranch (change_id,
 * getting the basic info about the change
 */
 function run(){
-
-	getChangeSummary(url, function(result){
+	
+	// Get change number
+	var cn = getChangeNumber (url) 
+	getChangeSummary(cn, function(result){
 
 		var project = result.project
 		var change_id = result.change_id
@@ -202,14 +204,8 @@ function run(){
 		// Form the repo URL
 		repo_url = HOST_ADDR + "/" + project
 
-		/*/ Get detais about the change
-		getChangeInfo(change_id, function(result){
-			let change_head = result.current_revision
-			revisions_info = result.revisions[change_head]
-		});*/
-
-		// Get commit info about change branch
-		getCommitInfo(change_id, function(commitInfo){
+		// Get the latest commit in the change branch
+		getChangeInfo(change_id, "current", function(commitInfo){
 
 			// Get the target branch: if merge to master branch
 			//var targetBranch = result.branch
