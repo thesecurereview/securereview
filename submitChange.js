@@ -3,9 +3,9 @@
 - Find the merge base commit (Common Ancestor)
 - 
 */
-
 var url;
 var repo_url;
+
 
 /**
 * Create the signed merge commit
@@ -25,6 +25,14 @@ function runMergeProcess(change_id){
 		//differentiate files between change and base branches
 		var [added_files, deleted_files, modified_files] = 
 			differentiate_blobs(result)
+
+		console.log(added_files, deleted_files, modified_files)
+		// Find involved trees/subtree in the merge
+		var paths = added_files.concat(
+			deleted_files, modified_files);
+		var changed_dirs = getCommonDirs (paths);
+
+		console.log(changed_dirs)
 	});
 
 }
@@ -47,8 +55,8 @@ function run(){
 		// Populate the parent window
 		getParentInfo(project, branch)
 
-		//Create signed merge commit
-		runMergeProcess()
+		// Run the merge process
+		runMergeProcess(change_id)
 
 	})
 

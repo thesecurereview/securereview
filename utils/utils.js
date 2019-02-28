@@ -2,11 +2,11 @@ var pushService = 'git-receive-pack'
 var fetchService = 'git-upload-pack'
 var service = 'git-upload-pack'
 
-//FIXME determine the following info from the user or if possible from the URL 
+//FIXME: Take user info automatically
+// OR Add OAuth
 var authUsername= 'hmd'
 var authEmail = 'hammad.afzali@gmail.com'
 var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ"
-//var HOST_ADDR = "http://hmdfsn@localhost:8889"
 var HOST_ADDR = "http://localhost:8080"
 var PUT_URL = "http://hmd@localhost:8080/a"
 
@@ -15,23 +15,63 @@ var auth = {
 	password: authPassword
 }
 
-/*Get the change number*/
-function get_file_name(url){
 
-	/* split by / and take the latest one*/
-	url = url.split("/");
-	return url.pop();
+// Remove duplicate elements from an array
+function uniqArray(array) {
+	return array.filter(function(element, index, self) {
+    		return index == self.indexOf(element);
+	});
 }
 
 
-//find a dictionary key which contains a substring
-function findValueByPrefix(object, prefix) {
-	for (var property in object) {
-		if (object.hasOwnProperty(property) && 
-			property.toString().includes(prefix)) {
-			return object[property];
-		}
+// Extract the dirpath from filepath
+function getDirPaths(fpath){
+
+	// Remove everything after the last "/"
+	return fpath.substr(0, 
+		fpath.lastIndexOf('/'));
+}
+
+
+// Get a list of intermediate paths in a filepath
+function getIntermediatePaths (fpath){
+
+	//remove the last dir from the end
+	var list = [];
+	while (fpath != ""){
+		fpath = getDirPaths (fpath);
+		list.push (fpath);
 	}
+
+	return list;
 }
 
+
+/**
+* Find subdirs in an array of paths
+*/
+function getCommonDirs (paths){
+
+	/* FIXME: find a better solution
+	* - find subdirs
+	* - remove duplicates
+	*/	
+
+	//get all subdirs
+	var dirs = [];
+	for (var i = 0; i < paths.length; i++) {
+		//get intermediate paths
+		var iPaths = getIntermediatePaths(paths[i])
+		// concat paths to the main list
+		dirs = dirs.concat(iPaths);
+	}
+
+	/*FIXME: 
+	* Make sure no parent is updated before its child
+	* check if sort and uniq are engough
+	*/
+
+	//sort dirs and remove duplicates
+	return uniqArray(dirs.sort());
+}
 
