@@ -27,7 +27,7 @@ function getChangeSummary(cn, callback){
 
 
 // Get the head of change branch
-function getChangeInfo(change_id, revision, callback){
+function getRevisionCommit(change_id, revision, callback){
 
 	// Form query
 	endpoint = "changes/" + change_id + 
@@ -42,17 +42,31 @@ function getChangeInfo(change_id, revision, callback){
 
 
 // Get details about the change
-function getCurrentReview(change_id, callback){
+function getRevisionReview(change_id, revision, callback){
 
 	// form query
 	var endpoint = "changes/" + change_id + 
-		"/revisions/current/review"
+		"/revisions/" + revision + "/review"
 
 	// fire get request to get all info about the change
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
 		callback (parseChangeInfo(result))
 	})
 	
+}
+
+
+// Get details about the change
+function getRevisionFiles(change_id, revision, callback){
+
+	// form query
+	var endpoint = "changes/" + change_id + 
+		"/revisions/" + revision + "/files"
+
+	// fire get request to get all info about the change
+	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		callback (parseChangeInfo(result))
+	})	
 }
 
 
@@ -86,20 +100,22 @@ function getCommitInfo(project, commitID, callback){
 }
 
 
-// Extract parents from a commit object
-function extractCommitParents (commitInfo){
+// Get the head of a branch
+function getParentInfo(project, branch, callback){
 
-	var parents = [];
-	for (p in commitInfo.parents){
-		parents.push(commitInfo.parents[p].commit)
-	}
+	getBranchInfo(project, branch, function(result){
+		// Get the details of the base branch
+		getCommitInfo(project, result.revision, 
+			function(result){
+			//Populate the window
+			setParentInfo (result)
+		});
 
-	return parents
+	});
 }
 
-
 /**
-* populate the parent info in popup window
+* Populate the popup window with parent info
 */
 function setParentInfo(commit) {
 	
@@ -113,4 +129,16 @@ function setParentInfo(commit) {
 
 	/*fill the parent info form*/
 	document.getElementById('parent_info').value = parent_info;
+}
+
+
+// Extract parents from a commit object
+function extractCommitParents (commitInfo){
+
+	var parents = [];
+	for (p in commitInfo.parents){
+		parents.push(commitInfo.parents[p].commit)
+	}
+
+	return parents
 }

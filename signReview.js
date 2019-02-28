@@ -205,7 +205,7 @@ function run(){
 		repo_url = HOST_ADDR + "/" + project
 
 		// Get the latest commit in the change branch
-		getChangeInfo(change_id, "current", function(commitInfo){
+		getRevisionCommit(change_id, "current", function(commitInfo){
 
 			// Get the target branch: if merge to master branch
 			//var targetBranch = result.branch
