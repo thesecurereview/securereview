@@ -133,7 +133,7 @@ function setParentInfo(commit) {
 
 
 // Extract parents from a commit object
-function extractCommitParents (commitInfo){
+function extractParents (commitInfo){
 
 	var parents = [];
 	for (p in commitInfo.parents){

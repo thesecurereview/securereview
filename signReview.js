@@ -11,47 +11,26 @@ var url;
 var repo_url;
 
 
-// Fetch objects from the server
-function fetchObjects(repo_url, wants, haves, callback){
+// Push commit to the server
+function pushCommit(changeNumber, oldHead, commit){
 
-	if (!repo_url.endsWith('.git')) repo_url += '.git'
-
-	// Start git-upload-pack process
-	get_req(repo_url, service, auth, function (result){
-
-		//TODO: parse refs to set oids
-		//TODO: parse capabilities
-		var caps = result.capabilities;
-		var refs = result.refs;
-
-		// Ask for the objects (wants)
-		post_req(repo_url, service, auth, wants, haves,
-		function (result){
-			callback(result)
-		});
-	});
-}
+	// Create new signed commit
+	var type = "commit";
+	var obj = createGitObject(type, commit);
+	var newHead = obj.id;
 
 
+	var objects = [];
+	objects.push([type, obj.object]);
 
-// Get the tree hash of a commit object
-function getTreeHash(head, parent, callback){
-
-	/* FIXME: 
-	 Assume we have the parent, and want the head
-	 Assume wants = head, haves=parent
-
-	wants = ["16d598f9639cbcaa1f2852d4e6e504b549404659"]
-	haves = ["5087ff36f724487f77025a497b243ab6b8862c10"]
-	*/
-
-	// Pass the head and parent as an array	
-	fetchObjects(repo_url, [head], [parent], function(result){
-		// FIXME: decompress packfile to extract tree hash
-		console.log(result)
-		tree_hash = extract_commit_info(result)	
-
-	});
+	// Call send-pack to update the change branch
+	sendPackLine(repo_url, auth, changeNumber, 
+		newHead, oldHead, objects, 
+		function(result){ 
+			console.log(result)
+			parseSendPackResult (result)
+		}
+	);
 
 }
 
@@ -78,37 +57,12 @@ function createSignedCommit(commitInfo, callback){
 }
 
 
-// Push commit to the server
-function pushCommit(changeNumber, oldHead, commit){
-
-	// Create new signed commit
-	var type = "commit";
-	var obj = createGitObject(type, commit);
-	var newHead = obj.id;
-
-
-	var objects = [];
-	objects.push([type, obj.object]);
-
-	// Call send-pack to update the change branch
-	sendPackLine(repo_url, auth, changeNumber, 
-		newHead, oldHead, objects, 
-		function(result){ 
-			console.log(result)
-			//parseSendPackResult (result)
-		}
-	);
-
-}
-
-
 //create a new commit and push to the server
-function updateChangeBranch(author, parents, ancestors, 
+function updateChangeBranch(author, parents, branch, 
 		changeNumber, commitMessage){
-	//FIXME get the tree_hash, 
-	//getTreeHash (parents[0], exParents[0], function(treeHash){
-		treeHash = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
-		treeHash = "0764860a8e2f95435823440264486a3a99f6eb6d"
+	// Get the tree hash, 
+	getTreeHash (repo_url, branch, changeNumber, function(treeHash){
+
 		//Create a new signed 
 		createSignedCommit({
 			treeHash:treeHash,
@@ -120,8 +74,9 @@ function updateChangeBranch(author, parents, ancestors,
 			pushCommit (changeNumber, parents[0], signedCommit)
 		});
 
-	//});
+	});
 }
+
 
 
 /**
@@ -198,6 +153,7 @@ function run(){
 	getChangeSummary(cn, function(result){
 
 		var project = result.project
+		var branch = result.branch
 		var change_id = result.change_id
 		var changeNumber = result._number
 
@@ -211,7 +167,7 @@ function run(){
 			//var targetBranch = result.branch
 
 			// Get base commit in the base branch
-			var ancestors = extractCommitParents (commitInfo);
+			var ancestors = extractParents (commitInfo);
 			
 			//var oldHead = commitInfo.commit;
 			var parents = []
@@ -238,12 +194,12 @@ function run(){
 				*/
 
 				// 1st approach complains about missing objects
-				/*updateChangeBranch(author, parents, ancestors,
-					changeNumber, commitMessage)*/
+				updateChangeBranch(author, parents, branch,
+					changeNumber, commitMessage)
 
-				// 2nd approach works for now
+				/*/ 2nd approach works for now
 				amendChangeBranch (change_id, 
-					review, commitMessage)
+					review, commitMessage)*/
 			})
 		});
 

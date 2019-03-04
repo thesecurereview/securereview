@@ -1,6 +1,5 @@
-var pushService = 'git-receive-pack'
-var fetchService = 'git-upload-pack'
-var service = 'git-upload-pack'
+var RECEIVEPACK = 'git-receive-pack'
+var UPLOADPACK = 'git-upload-pack'
 
 //FIXME: Take user info automatically
 // OR Add OAuth
@@ -13,6 +12,11 @@ var PUT_URL = "http://hmd@localhost:8080/a"
 var auth = {
 	username: authUsername,
 	password: authPassword
+}
+
+// Compute the intersect between two arrays
+function computeIntersect (a, b) {
+	return a.filter(value => -1 !== b.indexOf(value));
 }
 
 
@@ -73,5 +77,12 @@ function getCommonDirs (paths){
 
 	//sort dirs and remove duplicates
 	return uniqArray(dirs.sort());
+}
+
+
+function toHexString(byteArray) {
+  return Array.prototype.map.call(byteArray, function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('');
 }
 

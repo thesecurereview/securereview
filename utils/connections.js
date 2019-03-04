@@ -6,7 +6,7 @@ function basicAuth (auth) {
 
 
 //Send request
-function request(method, url, headers, body, callback) {
+function request(method, repo_url, headers, body, callback) {
 
 	if (typeof body === "function") {
 		callback = body;
@@ -14,11 +14,11 @@ function request(method, url, headers, body, callback) {
 	}
 
 	if (!callback) {
-		return request.bind(null, method, url, headers, body);
+		return request.bind(null, method, repo_url, headers, body);
 	}
 
 	var xhr = new XMLHttpRequest();
-	xhr.open(method, url, true);
+	xhr.open(method, repo_url, true);
 
 	Object.keys(headers).forEach(function (name) {
 		xhr.setRequestHeader(name, headers[name]);
@@ -49,7 +49,7 @@ function request(method, url, headers, body, callback) {
 /**
 * Create pify request
 */
-function pifyRequest(method, url, headers, body, callback) {
+function pifyRequest(method, repo_url, headers, resType, body, callback) {
 
 	if (typeof body === "function") {
 		callback = body;
@@ -57,7 +57,7 @@ function pifyRequest(method, url, headers, body, callback) {
 	}
 
 	if (!callback) {
-		return request.bind(null, method, url, headers, body);
+		return request.bind(method, repo_url, headers, body);
 	}
 
 	return new Promise(function(resolve, reject) {
@@ -96,8 +96,8 @@ function pifyRequest(method, url, headers, body, callback) {
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState !== 4) return;
 
-			var freshData = xhr.response.substr(xhr.seenBytes);
-			xhr.seenBytes = xhr.responseText.length;
+			/*var freshData = xhr.response.substr(xhr.seenBytes);
+			xhr.seenBytes = xhr.responseText.length;*/
 	
 			var resHeaders = {};
 			xhr.getAllResponseHeaders().trim().split("\r\n").forEach(function (line) {
@@ -110,20 +110,23 @@ function pifyRequest(method, url, headers, body, callback) {
 				statusCode: xhr.status,
 				statusText: xhr.statusText,
 				headers: resHeaders,
-				freshData: freshData,
+				//freshData: freshData,
 				body: xhr.response
 			});
 
 		};
 
 
-		xhr.open(method, url, true);
-		//xhr.responseType = 'arraybuffer';
+		xhr.open(method, repo_url, true);
 
 
 		Object.keys(headers).forEach(function (name) {
 			xhr.setRequestHeader(name, headers[name]);
 		});
+
+		if (resType !== null) {
+			xhr.responseType = resType;
+		}
 
 		xhr.send(body);
 	});
@@ -131,16 +134,16 @@ function pifyRequest(method, url, headers, body, callback) {
 
 
 //GET request over an endpoint
-function get_endpoint(url, endpoint, auth, callback){
+function get_endpoint(repo_url, endpoint, auth, callback){
 
 	let headers = {}
 	if (auth) {
 		headers['Authorization'] = basicAuth(auth)
 	}
 
-	url = `${url}/${endpoint}`
+	repo_url = `${repo_url}/${endpoint}`
 
-	request("GET", url, headers, function(res){
+	request("GET", repo_url, headers, function(res){
 		if (res.statusCode !== 200) {
 			throw new Error(
 			`HTTP Error: ${res.statusCode}`)
@@ -152,7 +155,7 @@ function get_endpoint(url, endpoint, auth, callback){
 }
 
 //PUT/POST request over an endpoint
-function post_endpoint(method, url, endpoint, auth, 
+function post_endpoint(method, repo_url, endpoint, auth, 
 		data, callback){
 
 	let headers = {}
@@ -161,16 +164,23 @@ function post_endpoint(method, url, endpoint, auth,
 	}
 	headers['Accept'] = `application/json`
 
-	url = `${url}/${endpoint}`
+	repo_url = `${repo_url}/${endpoint}`
 
-	pifyRequest(method, url, headers, data, function(res){
-		callback(res)
-	});
+	pifyRequest(
+		method,
+		repo_url,
+		headers, 
+		null, //resType=null 
+		data,
+		function(res){
+			callback(res)
+		}
+	);
 
 }
 
 //PUT/POST request over an endpoint
-function post_review_endpoint(method, url, endpoint, auth, 
+function post_review_endpoint(method, repo_url, endpoint, auth, 
 		data, callback){
 
 	let headers = {}
@@ -185,39 +195,48 @@ function post_review_endpoint(method, url, endpoint, auth,
 	else
 		headers['Content-Type'] = `application/json`*/
 
-	url = `${url}/${endpoint}`
+	repo_url = `${repo_url}/${endpoint}`
 
-	pifyRequest(method, url, headers, data, function(res){
-		callback(res)
-	});
+	pifyRequest(
+		method,
+		repo_url,
+		headers, 
+		null, //resType=null 
+		data,
+		function(res){
+			callback(res)
+		}
+	);
 
 }
 
 
 // GET request by service
-function get_req(url, service, auth, callback){
+function get_req(repo_url, service, auth, callback){
+
+	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
 
 	let headers = {}
 	if (auth) {
 		headers['Authorization'] = basicAuth(auth)
 	}
 
-	url = `${url}/info/refs?service=${service}`
+	repo_url = `${repo_url}/info/refs?service=${service}`
 	
-	request("GET", url, headers, function(res){
+	request("GET", repo_url, headers, function(res){
 		if (res.statusCode !== 200) {
 			throw new Error(
 			`HTTP Error: ${res.statusCode}`)
 		}
-		callback(
-			parseGETResponse(res.body, service)
-		)
+		callback(res.body)
 	})
 }
 
 
 // POST request by service
-function post_req(url, service, auth, wants, haves, callback){
+var post_req = async function (repo_url, service, auth, stream, callback) {
+
+	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
 
 	let headers = {}
 	headers['Content-Type'] = `application/x-${service}-request`
@@ -227,22 +246,26 @@ function post_req(url, service, auth, wants, haves, callback){
 		headers['Authorization'] = basicAuth(auth)
 	}
 
-	url = `${url}/${service}`
+	let conStream = concatStreamBuffer(stream)
 
-	/*create the pack stream*/
-	packstream = wantPackLine (wants, haves)
+	repo_url = `${repo_url}/${service}`
 
-	//concat the packstream
-	let conStream = concatStreamBuffer(packstream)
+	pifyRequest(
+		"POST", 
+		repo_url, 
+		headers, 
+		"arraybuffer", 
+		conStream, 
+		function(res){
+			if (res.statusCode !== 200) {
+				throw new Error(`HTTP Error: `)//${res.statusCode} ${res.statusMessage}`)
+			}
 
-	pifyRequest("POST", url, headers, conStream, function(res){
+			//parse the response and then callback
+			callback (res.body)
+		}
+	);
 
-		/*if (res.statusCode !== 200) {
-			throw new Error(`HTTP Error: ${res.statusCode}`)
-		}*/
-		callback(parsePOSTResponse(res.body, service))
-	});
-	
 }
 
 
@@ -294,62 +317,23 @@ var connect = async function (
 
 	let conStream = concatStreamBuffer(stream)
 
-	pifyRequest("POST", `${repo_url}/${service}`, 
-		headers, conStream, function(res){
+	pifyRequest(
+		"POST",
+		`${repo_url}/${service}`,
+		headers, 
+		null, //resType=null 
+		conStream,
+		function(res){
+			if (res.statusCode !== 200) {
+				throw new Error(`HTTP Error: `)//${res.statusCode} ${res.statusMessage}`)
+			}
 
-		if (res.statusCode !== 200) {
-			throw new Error(`HTTP Error: `)//${res.statusCode} ${res.statusMessage}`)
+			/*parse the response and then callback*/
+			callback (res.body)
 		}
-
-		/*parse the response and then callback*/
-		callback (res.body)
-	});
+	);
 
 }
-
-
-// Specific funciton to parse change info
-function parseChangeInfo (data){
-
-	//split it into lines
-	data = data.split("\n")
-
-	//remove the first and last line
-	data.shift()
-	data.pop()
-
-	//join array of lines
-	data = data.join("\n")
-	data = JSON.parse(data);
-	
-	return data
-}
-
-
-/**
-* Parse the final server's response
-*/
-var parseSendPackResult = function (response){
-
-	console.log(response);
-
-	/*FIXME check response lines
-	let lines = response.split('\n')
-
-	if (!line.startsWith('unpack ')) {
-		window.alert(line)
-	}*/
-
-	if (!response.includes('unpack ')) {
-		window.alert(line)
-	}
-	else{
-		//refresh the page If the unpack is ok
-		//refreshPage(file_name)
-	}
-
-}
-
 
 
 // Parse GET response
@@ -380,22 +364,26 @@ function parseGETResponse(data, service){
 		resHead = lines.shift()
 	else if (server == "Gerrit")
 		resHead = lines[0]
+		resHead = lines.shift()
 	*/
 
-	// Check the first line: service info
 	var resHead = lines.shift()
-	if (! (resHead.toString('utf8').includes(`service=${service}`)) ) {
+	resHead = resHead.toString('utf8').replace(/\n$/, '')
+
+	// Check the first line: service info
+	if (! (resHead.includes(`service=${service}`)) ) {
 		throw new Error(
 			`Expected '# service=${service}\\n' 
 			but got '${resHead.toString('utf8')}'`
 		)
 	}
 
-	//Remove the last line (0000
+	//Remove the last line: 0000
 	lines.pop()
 	
 	let [refLine, capLine] = lines[0].split('\0')
 	var capabilities = capLine.split(' ')
+
 	//remove the first empty element, FIXME: check it for GitHub
 	capabilities.shift()
 
@@ -404,6 +392,7 @@ function parseGETResponse(data, service){
 
 	// Map over refs
 	const refs = new Map()
+	var symrefs = ""
 	for (let line of lines) {
 		let [ref, name] = line.split(' ')
 		//remove the length from the beginning
@@ -411,61 +400,73 @@ function parseGETResponse(data, service){
 		refs.set(name, ref)	
 	}
 
-	return { capabilities, refs }
+	// Check if there is Symrefs in capabilities.
+	for (let i in capabilities) {
+		if (capabilities[i].startsWith('symref=')) {
+			symrefs = capabilities[i]
+			symrefs = symrefs.replace("symref=", "");
+			capabilities.splice(i,1)
+		}
+	}
+
+	return {
+		refs:refs, 
+		symrefs:symrefs,
+		capabilities:capabilities
+		}
 }
 
 
-// Parse GET response
-function parsePOSTResponse(data, service){
-
-	/*response lines
-	* 0: 008NAK\n"
-	" 1: PACK00000002"
-	" ..."
-	" n: 0000"
-	*/
+// Prase post response of packfile
+function parsePackfileResponse(data){
 
 	/*
-	* Check if the response is OK, and
-	* remove the first and last line to get refs
+	If 'side-band' or 'side-band-64k' capabilities have been specified by
+	the client, the server will send the packfile data multiplexed.
+
+	Each packet starting with the packet-line length of the amount of data
+	that follows, followed by a single byte specifying the sideband the
+	following data is coming in on.
+
+	In 'side-band' mode, it will send up to 999 data bytes plus 1 control
+	code, for a total of up to 1000 bytes in a pkt-line.  In 'side-band-64k'
+	mode it will send up to 65519 data bytes plus 1 control code, for a
+	total of up to 65520 bytes in a pkt-line.
+
+	The sideband byte will be a '1', '2' or a '3'. Sideband '1' will contain
+	packfile data, sideband '2' will be used for progress information that the
+	client will generally print to stderr and sideband '3' is used for error
+	information.
+
+	If no 'side-band' capability was specified, the server will stream the
+	entire packfile without multiplexing.
 	*/
-	
-	//remove the first line 008NAK\n, the rest is the packfile
-	data = data.substr(8)
 
-	//[0, 4] : PACK
-	pack = data.slice(0,4)
-	buffer = createBuffer(pack)
-	console.log(buffer.toString())
-	//[4, 8] : Packfile version
-	version = data.slice(4, 8)
-	buffer = createBuffer(version)
-	console.log(buffer.toString('hex'))
-	//[8, 12] : Number of entries
-	entries = data.slice(8, 12)
-	buffer = createBuffer(entries)
-	console.log(buffer.toString('hex'))
+	// For now, we do not use side-band
+	// So the the response format is following
+	/*
+	* 0: 008NAK\n" or "00000008NAK\n"
+	" 1: PACK00000002..."
+	*/	
 
-	//remove the sig, version, entries
-	data = data.substr(12)
+	//Cut the first 8 or 12 bytes
+	// if Response is string
+	if (typeof(data) == "string"){
+		// data = data.substr(8) // "008NAK\n"
+		data = data.substr(12) //"00000008NAK\n"
+	}
+	else{
+		// if Response is arraybuffer
+		data = new Uint8Array(data);
+		//data = data.slice(8, data.byteLength) // "008NAK\n"
+		data = data.slice(12, data.byteLength) //"00000008NAK\n"
+	}
 
-	//remove the last 20B, sha1
-	data = data.slice(0, -20)
-
-	//convert the input to byte
-	var arrayBuffer = str2ab(data)
-	var uint8View = new Uint8Array(arrayBuffer);
-	//console.log(arrayBuffer)
-	//console.log(uint8View)
-
-	//decompress the data
-	pako = getPako()
-	data = pako.inflate(data, { raw: true});
-	console.log(data)
-
+	return data
 }
 
 
+//Parse
 function parseMSGResponse(method, res){
 
 	if (method == "PUT"){
@@ -491,103 +492,44 @@ function parseMSGResponse(method, res){
 }
 
 
-//readableBuffer
-function rdb (data){
-	buffer = createBuffer(data)
-	return buffer.toString('2')
-}
+/**
+* Parse the final server's response
+*/
+var parseSendPackResult = function (response){
 
+	/*FIXME check response lines
+	let lines = response.split('\n')
 
+	if (!line.startsWith('unpack ')) {
+		window.alert(line)
+	}*/
 
-function b64DecodeUnicode(str) {
-	return (str.split('').map(function(c) {
-		//return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-		return '' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-	}).join(''));
-}
-
-var zeroPad = function(num) {
-    return "00000000".slice(String(num).length) + num
-}
-
-// Decode base64 (convert ascii to binary)
-var asciiToBinary = function(str) {
-	return str.replace(/[\s\S]/g, function(str) {
-		str = zeroPad(str.charCodeAt().toString(2));
-		return str
-	})
-}
-
-
-function asciiToChar (a) {return a.charCodeAt(0); }
-
-// Convert binary string to character-number array
-var charData = function(strData){
-	return strData.split('').map(function(x){return x.charCodeAt(0);});
-}
-
-function testPako(){
-	pako = getPako()
-
-	let data = { ping: "12345678" };
-
-	let json = JSON.stringify(data);
-	console.log(json);
-
-	let binStr = pako.deflate(json);
-	console.log(binStr);
-
-	let text = pako.inflate(binStr);
-	console.log(text);
-
-	console.log(String.fromCharCode.apply(null, text));
-
-}
-
-
-function hex_to_bytes(hex) {
-	var bytes = []
-	for (i = 0; i < hex.length; i+=2) {
-		var ch = parseInt(hex.substr(i, 2), 16);
-		bytes.push(ch); 
+	if (!response.includes('unpack ')) {
+		window.alert(line)
 	}
-	res = new Uint8Array(bytes);
-	return res.buffer;
-}
-
-
-function ab2str(buf) {
-	return String.fromCharCode.apply(null, new Uint16Array(buf));
-}
-
-function str2ab(str) {
-	var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-	var bufView = new Uint16Array(buf);
-	for (var i=0, strLen=str.length; i < strLen; i++) {
-		bufView[i] = str.charCodeAt(i);
+	else{
+		//refresh the page If the unpack is ok
+		//refreshPage(file_name)
 	}
-	return buf;
-}
-
-
-function saveFile(dat){
-$http({
-    url: 'your/webservice',
-    method: 'POST',
-    responseType: 'arraybuffer',
-    data: json, //this is your json data string
-    headers: {
-        'Content-type': 'application/json',
-        'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    }
-}).success(function(data){
-    var blob = new Blob([data], {
-        type: `application/x-${service}-request`
-    });
-    saveAs(blob, 'testPack' + '.pack');
-}).error(function(){
-    //Some error log
-});
 
 }
+
+
+// Specific funciton to parse change info
+function parseChangeInfo (data){
+
+	//split it into lines
+	data = data.split("\n")
+
+	//remove the first and last line
+	data.shift()
+	data.pop()
+
+	//join array of lines
+	data = data.join("\n")
+	data = JSON.parse(data);
+	
+	return data
+}
+
 

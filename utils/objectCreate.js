@@ -62,7 +62,7 @@ function createGitObject(type, content){
 	if (type == "tree") //content = tree_entries
 		object = treeObject (content)
 	else
-		object = createBuffer (content)
+		object = createBuffer (content, 'utf8')
 
 	//wrap object into buffer
 	let wrap = objectWrap (type, object)
@@ -375,15 +375,6 @@ function compare_by_column(a, b){
 }
 
 
-/*Encoding*/
-function encode_utf8(s) {
-	return unescape(encodeURIComponent(s));
-}
-
-function decode_utf8(s) {
-	return decodeURIComponent(escape(s));
-}
-
 
 /*Convert array of tree entries to array of dictionary*/
 function wrap_tree_entries (entries){
@@ -434,49 +425,5 @@ function unwrap_tree_entries (entries){
 	return unwrap_tree;
 }
 
-
-
-/*parse the tree content*/
-function merge_unwrap_tree_entries (entries){
-	
-	/*
-	* current format: obj = {id:"", mode:"", name:"", path:"", type:""}
-	* desired format: array = [mode, type, id, name]
-	*/
-
-	var unwrap_tree = []; 
-	for (i in entries){
-
-		var entry = [];
-		var mode = entries[i].mode;
-
-		/*omit the first char of the tree mode*/
-		if  (entries[i].type == 'tree'){
-			mode = mode.substr(1);
-		}
-
-		/*create the tree entry*/
-		entry.push(mode);
-		entry.push(entries[i].type);
-		entry.push(entries[i].id);
-		entry.push(entries[i].name);
-		unwrap_tree.push(entry);
-	}
-
-	return unwrap_tree;
-}
-
-
-/*sort an array of objects based name*/
-function sortFactory (prop) {
-	// https://stackoverflow.com/a/40355107/2168416
-	return function(a,b){
-		+(a[prop] > b[prop]) || -(a[prop] < b[prop])		
-	}
-}
-
-
-//console.log(data.sort(sortFactory("name")))
-//console.log(sort_array_objects(data, "name"))
 
 

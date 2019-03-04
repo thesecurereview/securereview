@@ -5,13 +5,16 @@ var pako = require('pako')
 /*concat array of buffer*/
 window.bufferConcat = function (array) {
 
-    return Buffer.concat(array)
+	return Buffer.concat(array)
 }
 
 /*commit object*/
-window.createBuffer = function (content) {
+window.createBuffer = function (content, type=null) {
 
-    return Buffer.from(content, 'utf8')
+	if (type !== null)
+		return Buffer.from(content, type)
+	else
+		return Buffer.from(content)
 }
 
 
@@ -53,35 +56,38 @@ window.compressObject = function(object){
 
 
 /*uncompress object*/
-window.uncompressObject = function(object){
+window.decompressObject = function(object){
 
 	return Buffer.from(pako.inflate(object))
 }
 
 
-/*wrap object*/
+/*unwrap object*/
 window.objectUnwrap = function (buffer) {
 
 	let s = buffer.indexOf(32) // first space
 	let i = buffer.indexOf(0) // first null value
 	let type = buffer.slice(0, s).toString('utf8') // get type of object
-	let length = buffer.slice(s + 1, i).toString('utf8') // get type of object
 	let actualLength = buffer.length - (i + 1)
+	//let unwrap = buffer.slice(s + 1, i) // get object content
+	let unwrap = buffer.slice(0, i) // get object content
 
-	console.log(s, i, type, length, actualLength)
-
-	// verify length
+	/*/ TODO: verify length
 	if (parseInt(length) !== actualLength) {
 		throw new Error(
 		`Length mismatch: expected ${length} bytes but got ${actualLength} instead.`
 		)
-	}
+	}*/
 
-	return {
-		type,
-		object: Buffer.from(buffer.slice(i + 1))
-	}
+	/*return {
+		type: type,
+		content: unwrap.toString('utf8'),
+		object: Buffer.from(unwrap)
+	}*/
+
+	return unwrap.toString('utf8')
 }
+
 
 
 window.concatStreamBuffer = function (stream){
