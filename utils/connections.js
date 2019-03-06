@@ -63,42 +63,9 @@ function pifyRequest(method, repo_url, headers, resType, body, callback) {
 	return new Promise(function(resolve, reject) {
 		var xhr = new XMLHttpRequest();
 
-		/*xhr.onload = function() {
-			var status = xhr.status;
-
-			var type = xhr.getResponseHeader('content-type') || '';
-
-			var body = xhr.response;//Text;
-
-			if (type.indexOf('application/json') !== -1) {
-				try { body = JSON.parse(body); } catch(e) {}
-			} else if ('response' in xhr) {
-				body = xhr.response;
-			}
-
-			var resHeaders = {};
-			xhr.getAllResponseHeaders().trim().split("\r\n").forEach(function (line) {
-				var index = line.indexOf(":");
-				resHeaders[line.substring(0, index).toLowerCase()] =
-					 line.substring(index + 1).trim();
-			});
-
-			var options = {
-				statusCode: status,
-				statusText: xhr.statusText,
-				headers: resHeaders,
-				body: body
-			};
-
-			resolve(options);	
-		};*/
-
 		xhr.onreadystatechange = function() {
 			if (xhr.readyState !== 4) return;
 
-			/*var freshData = xhr.response.substr(xhr.seenBytes);
-			xhr.seenBytes = xhr.responseText.length;*/
-	
 			var resHeaders = {};
 			xhr.getAllResponseHeaders().trim().split("\r\n").forEach(function (line) {
 				var index = line.indexOf(":");
@@ -110,15 +77,12 @@ function pifyRequest(method, repo_url, headers, resType, body, callback) {
 				statusCode: xhr.status,
 				statusText: xhr.statusText,
 				headers: resHeaders,
-				//freshData: freshData,
 				body: xhr.response
 			});
 
 		};
 
-
 		xhr.open(method, repo_url, true);
-
 
 		Object.keys(headers).forEach(function (name) {
 			xhr.setRequestHeader(name, headers[name]);

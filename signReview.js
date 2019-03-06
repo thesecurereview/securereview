@@ -71,7 +71,7 @@ function updateChangeBranch(author, parents, branch,
 			commitMessage:commitMessage
 		}, function (signedCommit){
 			//push the commit to the server
-			pushCommit (changeNumber, parents[0], signedCommit)
+			//pushCommit (changeNumber, parents[0], signedCommit)
 		});
 
 	});

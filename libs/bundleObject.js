@@ -71,6 +71,7 @@ window.objectUnwrap = function (buffer) {
 	let actualLength = buffer.length - (i + 1)
 	//let unwrap = buffer.slice(s + 1, i) // get object content
 	let unwrap = buffer.slice(0, i) // get object content
+	console.log(type, buffer.toString('utf8'))
 
 	/*/ TODO: verify length
 	if (parseInt(length) !== actualLength) {

@@ -6,38 +6,6 @@
 var url;
 var repo_url;
 
-
-/**
-* Create the signed merge commit
-*/
-function createMergeCommit(change_id){
-
-
-}
-
-
-/**
-* Run the merge process 
-*/
-function runMergeProcess(change_id){
-
-	getRevisionFiles(change_id, "current", function(result){
-		//differentiate files between change and base branches
-		var [added_files, deleted_files, modified_files] = 
-			differentiate_blobs(result)
-
-		console.log(added_files, deleted_files, modified_files)
-		// Find involved trees/subtree in the merge
-		var paths = added_files.concat(
-			deleted_files, modified_files);
-		var changed_dirs = getCommonDirs (paths);
-
-		console.log(changed_dirs)
-	});
-
-}
-
-
 /**
 * Run the submitting merge by 
 * comparing the base and change branches
@@ -47,18 +15,43 @@ function run(){
 	// Get change number
 	var cn = getChangeNumber (url)
 	getChangeSummary(cn, function(result){
+
 		var project = result.project
 		var branch = result.branch
 		var change_id = result.change_id
 		var changeNumber = result._number
 
-		// Populate the parent window
-		getParentInfo(project, branch)
+		//TODO: sync the following API calls
+		// Get info: change branch
+		getRevisionReview(change_id, "current", function(changeInfo){
 
-		// Run the merge process
-		runMergeProcess(change_id)
+			// Get info: common ancestor (parent of the 1st commit in change branch)
+			getRevisionCommit(change_id, "1", function(caInfo){
 
-	})
+				// Get info about the base branch
+				getParentInfo(project, branch, function(baseInfo){
+
+					// Populate the parent window
+					setParentInfo (baseInfo);
+
+					// Form heads, Ignore CA if it's the same as base
+					var heads = {
+						changeHead: changeInfo.current_revision,
+						baseHead: baseInfo.commit
+					};
+					var caHead = caInfo.parents[0].commit
+					if (heads.baseHead !== caHead)
+						heads["caHead"]	= caHead					
+					
+					// Run the merge process
+					runMergeProcess(change_id, project, heads);
+				});
+
+			});
+
+		});
+
+	});
 
 }
 

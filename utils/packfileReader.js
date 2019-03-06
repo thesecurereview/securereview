@@ -214,7 +214,7 @@ var readFromPack = async function (pack) {
 		offset = Number(offset)
 
 		let o = offsetToObject[offset]
-		//if (o.oid) continue
+		if (o.oid) continue
 
 		try {
 			p.readDepth = 0

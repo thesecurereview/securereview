@@ -70,6 +70,27 @@ function getRevisionFiles(change_id, revision, callback){
 }
 
 
+// Get file content
+function getFileContent(project, commitID, fname, callback){
+
+	// Form query
+	endpoint = "projects/" + project + 
+		"/commits/" + commitID + "/files/" +
+		 fname + "/content"
+
+	/*endpoint = "projects/" + project + 
+		"/branches/" + "master" + "/files/" +
+		 fname + "/content"*/
+
+	// Fire get request to get change info
+	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		console.log(atob(result))
+		//callback (result)
+	})
+
+}
+
+
 // Get the head of branch
 function getBranchInfo(project, branch, callback){
 
@@ -105,14 +126,13 @@ function getParentInfo(project, branch, callback){
 
 	getBranchInfo(project, branch, function(result){
 		// Get the details of the base branch
-		getCommitInfo(project, result.revision, 
-			function(result){
-			//Populate the window
-			setParentInfo (result)
+		getCommitInfo(project, result.revision, function(result){
+			callback(result)
 		});
 
 	});
 }
+
 
 /**
 * Populate the popup window with parent info
@@ -142,3 +162,12 @@ function extractParents (commitInfo){
 
 	return parents
 }
+
+//Extract the fpath and ref name of fetched blob
+function getBlobInfo (item){
+	var head = extractBetween(item, "commits/", "/files")
+	var fpath = extractBetween(item, "files/", "/content")
+
+	return [filePathUnTrim(fpath), head];
+}
+

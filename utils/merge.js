@@ -50,4 +50,34 @@ function differentiate_blobs (files){
 }
 
 
+/**
+* Run the merge process 
+*/
+function runMergeProcess(change_id, project, heads){
+
+	// Get the status of changed files in the change branch
+	getRevisionFiles(change_id, heads.changeHead, function(result){
+
+		//differentiate files between change and base branches
+		var [added_files, deleted_files, modified_files] = 
+			differentiate_blobs(result);
+
+		// Find involved trees/subtree in the merge
+		var paths = added_files.concat(
+			deleted_files, modified_files);
+
+		// Creat a uniq list of involved trees
+		var changed_dirs = getCommonDirs (paths);
+
+		// Get modified blobs for ca, base, pr
+		getBlobs(project, heads, modified_files, 
+			function(result){
+				console.log(result)
+			}
+		);
+
+		//TODO: get the CA tree hash = parent of the first commit
+	});
+
+}
 

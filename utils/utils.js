@@ -28,6 +28,13 @@ function uniqArray(array) {
 }
 
 
+// Get the dictionary values
+function dictValues(dict){
+	return Object.keys(dict).map(function(key){
+	    return dict[key];
+	});
+}
+
 // Extract the dirpath from filepath
 function getDirPaths(fpath){
 
@@ -85,4 +92,28 @@ function toHexString(byteArray) {
     return ('0' + (byte & 0xFF).toString(16)).slice(-2);
   }).join('');
 }
+
+
+// Replace all "/" occurrences with "%2F"
+function filePathTrim (fpath){
+	return replaceAll(fpath, '/', '%2F')
+}
+
+// Replace all "/" occurrences with "%2F"
+function filePathUnTrim (fpath){
+	return replaceAll(fpath, '%2F', '/')
+}
+
+
+// Replace all finds with the update
+function replaceAll (str, find, update){
+	return str.replace(new RegExp(find, 'g'), update)
+}
+
+
+// Extract everything between prefix and suffix
+function extractBetween (str, prefix, suffix) {
+	str = str.substring(str.indexOf(prefix) + prefix.length);
+	return str.substring(0, str.indexOf(suffix));
+};
 
