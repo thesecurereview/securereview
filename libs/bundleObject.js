@@ -62,32 +62,25 @@ window.decompressObject = function(object){
 }
 
 
-/*unwrap object*/
+/*unwrap object
 window.objectUnwrap = function (buffer) {
 
 	let s = buffer.indexOf(32) // first space
 	let i = buffer.indexOf(0) // first null value
 	let type = buffer.slice(0, s).toString('utf8') // get type of object
 	let actualLength = buffer.length - (i + 1)
-	//let unwrap = buffer.slice(s + 1, i) // get object content
+	let unwrap = buffer.slice(s + 1, i) // get object content
 	let unwrap = buffer.slice(0, i) // get object content
-	console.log(type, buffer.toString('utf8'))
 
-	/*/ TODO: verify length
+	// TODO: verify length
 	if (parseInt(length) !== actualLength) {
 		throw new Error(
 		`Length mismatch: expected ${length} bytes but got ${actualLength} instead.`
 		)
-	}*/
-
-	/*return {
-		type: type,
-		content: unwrap.toString('utf8'),
-		object: Buffer.from(unwrap)
-	}*/
+	}
 
 	return unwrap.toString('utf8')
-}
+}*/
 
 
 

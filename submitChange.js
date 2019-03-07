@@ -34,7 +34,7 @@ function run(){
 					// Populate the parent window
 					setParentInfo (baseInfo);
 
-					// Form heads, Ignore CA if it's the same as base
+					// Form heads, Ignore caHead if it's the same as baseHead
 					var heads = {
 						changeHead: changeInfo.current_revision,
 						baseHead: baseInfo.commit

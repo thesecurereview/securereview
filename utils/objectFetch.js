@@ -130,31 +130,33 @@ function fetchObjects(repo_url, target, changeNumber, callback){
 	});
 }
 
-	
-// Get the tree hash of a commit object
-function getTreeHash(repo_url, branch, changeNumber, callback){
 
-	fetchObjects(repo_url, branch, changeNumber, 
-		function(head, objects){
-
-			//read the commit object
-			var commit = objects[head]
-			callback(parseGitObject(commit).tree)
-		}
-	);
-}
-
-
-function parseGitObject(object){
+// Parse a commit object
+function parseCommitObject(object){
 
 	var treeHash = object.slice(
 		object.indexOf('tree ') + 5, 
 		object.indexOf('\nparent')
 	)	
 
-	//TODO: extract other info
+	//TODO: extract other fields
 	return {
 		tree: treeHash
-		}
+	}
 }
+
+	
+// Get the tree hash of a commit object
+function getTreeHash(repo_url, branch, changeNumber, callback){
+
+	fetchObjects(repo_url, branch, changeNumber, 
+		function(head, objects){
+			console.log(objects)
+			// Parse the commit object
+			var commit = objects[head].content
+			callback(parseCommitObject(commit).tree)
+		}
+	);
+}
+
 

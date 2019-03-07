@@ -1,5 +1,5 @@
 
-//Get Git object mode
+//Get tree entry mode
 function mode2type (mode) {
 	switch (mode) {
 		case '040000': return 'tree'
@@ -16,7 +16,7 @@ function mode2type (mode) {
 
 // Parse Tree Object
 function parseBuffer (buffer) {
-	let _entries = []
+	let entries = []
 	let cursor = 0
 
 	while (cursor < buffer.length) {
@@ -50,11 +50,32 @@ function parseBuffer (buffer) {
 		//Entry oid
 		let oid = buffer.slice(nullchar + 1, nullchar + 21).toString('hex')
 
-		_entries.push({ mode, path, oid, type })
+		entries.push({ mode, path, oid, type })
 		
 		//read next entry
 		cursor = nullchar + 21
 	}
 
-	return _entries
+	return entries
+}
+
+
+// Unwrap a Git Object buffer
+function objectReader(type, buffer){
+
+	/*/ FIXME: Check the if unwrap is correct
+	let unwrap = buffer.slice(s + 1, i) // get object content
+	let unwrap = buffer.slice(0, i) // get object content
+	let s = buffer.indexOf(32) // first space
+	let i = buffer.indexOf(0) // first null value
+	// TODO: verify buffer length
+	let actualLength = buffer.length - (i + 1)*/
+
+	let unwrap
+	if (type == "tree")
+		unwrap = parseBuffer (buffer)
+	else
+		unwrap = buffer.toString('utf8')
+
+	return unwrap
 }

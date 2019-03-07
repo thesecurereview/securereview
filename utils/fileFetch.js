@@ -36,7 +36,6 @@ function getBlobs (project, heads, files, callback){
 
 			// Assign content to the proper fpath and head
 			var [fpath, head] = getBlobInfo (item);
-			console.log([fpath, head])
 
 			// Initialize the sub-object, otherwise will get 'undefined' errors
 			if(fpath in blobContents == false){
@@ -45,7 +44,6 @@ function getBlobs (project, heads, files, callback){
 
 			// Store content of file per ref (content is base64 decoded)
 			blobContents [fpath][head] = atob(info);
-
 		}
 
 		// All blobs are fetched, callback
@@ -53,5 +51,4 @@ function getBlobs (project, heads, files, callback){
 	};
 
 	multipleAPICall(urls, mutliCallback);
-
 }

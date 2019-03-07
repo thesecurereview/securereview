@@ -69,10 +69,7 @@ class GitPackIndex {
 		this.offsetCache = {}
 	}
 
-	/*
-	* readSlice in the packfile
-	*/
-	//var readSlice = async function (start) {
+	// Read slice in the packfile
 	async readSlice (start) {
 		const types = {
 			0b0010000: 'commit',
@@ -85,7 +82,6 @@ class GitPackIndex {
 
 		let raw = (await this.pack).slice(start)
 		raw = createBuffer(raw)
-		//let raw = pack.slice(start)
 		let reader = new BufferCursor(raw)
 		let byte = reader.readUInt8()
 
@@ -100,15 +96,15 @@ class GitPackIndex {
 		let length = lastFour
 
 		// Whether the next byte is part of the variable-length encoded number
-		// is encoded in bit 7
+		// It is encoded in bit 7
 		let multibyte = byte & 0b10000000
 		if (multibyte) {
 			length = varIntDecode(reader, lastFour)
 		}
 
 		let object = null;
-		// Handle deltified objects
-		/*let base = null;
+		/*/ Handle deltified objects
+		let base = null;
 		if (type === 'ofs_delta') {
 			let offset = decodeVarInt(reader);
 			let baseOffset = start - offset
@@ -121,7 +117,8 @@ class GitPackIndex {
 	
 		// Handle undeltified objects
 		let buffer = raw.slice(reader.tell())
-		//Decompress the object
+
+		// Decompress the object
 		object = decompressObject(buffer)
 
 		// Assert that the object length is as expected.
@@ -188,24 +185,24 @@ var readFromPack = async function (pack) {
 	// We need to know the lengths of the slices to compute the CRCs.
 	let offsetArray = Object.keys(offsetToObject).map(Number)
 
-	let crc32 = getCRC32()
+	//let crc32 = getCRC32()
 	for (let [i, start] of offsetArray.entries()) {
 		let end =
 		i + 1 === offsetArray.length ? pack.byteLength - 20 : offsetArray[i + 1]
 		let o = offsetToObject[start]
-		let crc = crc32.buf(pack.slice(start, end)) >>> 0
+		//let crc = crc32.buf(pack.slice(start, end)) >>> 0
+		//o.crc = crc
 		o.end = end
-		o.crc = crc
 	}
 
 	// Read Git index
 	const p = new GitPackIndex({
 		pack: Promise.resolve(pack),
 		packfileSha,
-		crcs,
 		hashes,
-		objectTypes,
-		offsets/*,
+		objectTypes/*,
+		crcs,
+		offsets,
 		getExternalRefDelta*/
 	})
 
@@ -222,21 +219,18 @@ var readFromPack = async function (pack) {
 
 			let { type, object } = await p.readSlice(offset)
 
-			/*if (type == "commit"){
-				objectInfo = objectUnwrap (object);
-				//objectInfo = decompressObject (object);
-			}*/
-
 			//compute Git object sha1
 			let oid = getObjectHash (objectWrap(type, object))
 			o.oid = oid
 			hashes.push(oid)
-			offsets.set(oid, offset)
+			//offsets.set(oid, offset)
 			objectTypes.set(oid, type)
-			crcs[oid] = o.crc
+			//crcs[oid] = o.crc
 
-			//objectInfo[oid] = [type, objectUnwrap (object)]
-			objectInfo[oid] = objectUnwrap (object)
+			objectInfo[oid] = {
+				type: type,
+				content: objectReader (type, object)
+			}
 
 		} catch (err) {
 			console.log('ERROR', err)

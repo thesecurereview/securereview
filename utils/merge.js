@@ -62,12 +62,13 @@ function runMergeProcess(change_id, project, heads){
 		var [added_files, deleted_files, modified_files] = 
 			differentiate_blobs(result);
 
-		// Find involved trees/subtree in the merge
+		// Find involved trees/subtrees in the merge
 		var paths = added_files.concat(
 			deleted_files, modified_files);
 
 		// Creat a uniq list of involved trees
 		var changed_dirs = getCommonDirs (paths);
+
 
 		// Get modified blobs for ca, base, pr
 		getBlobs(project, heads, modified_files, 
