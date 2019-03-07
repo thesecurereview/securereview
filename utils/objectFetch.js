@@ -51,7 +51,7 @@ function wantPackLine ({
 /**
 * Fetch Git objects from the server
 */
-function fetchObjects(repo_url, target, changeNumber, callback){
+function fetchObjects({ repo_url, heads, refs }, callback){
 	
 	// Set upload service 
 	var service = UPLOADPACK
@@ -85,18 +85,25 @@ function fetchObjects(repo_url, target, changeNumber, callback){
 			`agent=${agent}`*/
 			]
 		)
-
-		// Form Capabilities
 	  	var caps = ` ${capabilities.join(' ')}`
+		
+		//Check if heas are provided, otherwise take  from refs
+		let wants = [];
+		if (!heads) {
+			for (i in refs){
+				let head;
+				if (refs[i].startsWith('refs'))
+					head = httpResponse.refs.get(refs[i])
+				else
+					head = httpResponse.refs.get(`refs/heads/${refs[i]}`)
+		
+				wants.push(head)
+			}	
+		}
+		else
+			wants = [...heads]
 
-		/* 
-		* Assume we have the parent, and want the head
-		* Assume wants = head, haves=parent
-		*/
-		console.log(httpResponse.refs)//.get(`refs/heads/${changeNumber}`))
-		let head = httpResponse.refs.get(`refs/heads/${target}`)
-		let shallows = httpResponse.capabilities.includes('shallow') ? [head] : []
-		let wants = [head]
+		let shallows = httpResponse.capabilities.includes('shallow') ? [...heads] : []
 		let haves = []
 		let depth = 1
 
@@ -123,7 +130,7 @@ function fetchObjects(repo_url, target, changeNumber, callback){
 
 				// Read the packfile data
 				readFromPack(packfile).then(function(result){
-					callback(head, result)
+					callback(result)
 				});
 			}
 		);
@@ -147,13 +154,14 @@ function parseCommitObject(object){
 
 	
 // Get the tree hash of a commit object
-function getTreeHash(repo_url, branch, changeNumber, callback){
+function getTreeHash(repo_url, heads, callback){
 
-	fetchObjects(repo_url, branch, changeNumber, 
-		function(head, objects){
-			console.log(objects)
+	//let refs = ["master", "refs/changes/43/43/3"]
+	// Assume we have the parent, and want the head
+	fetchObjects( {repo_url, heads}, 
+		function(objects){
 			// Parse the commit object
-			var commit = objects[head].content
+			var commit = objects[heads[0]].content
 			callback(parseCommitObject(commit).tree)
 		}
 	);

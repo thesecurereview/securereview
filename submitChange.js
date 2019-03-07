@@ -15,7 +15,6 @@ function run(){
 	// Get change number
 	var cn = getChangeNumber (url)
 	getChangeSummary(cn, function(result){
-
 		var project = result.project
 		var branch = result.branch
 		var change_id = result.change_id
@@ -25,12 +24,12 @@ function run(){
 		// Get info: change branch
 		getRevisionReview(change_id, "current", function(changeInfo){
 
+
 			// Get info: common ancestor (parent of the 1st commit in change branch)
 			getRevisionCommit(change_id, "1", function(caInfo){
 
 				// Get info about the base branch
-				getParentInfo(project, branch, function(baseInfo){
-
+				getBranchInfo(project, branch, function(baseInfo){
 					// Populate the parent window
 					setParentInfo (baseInfo);
 

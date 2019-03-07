@@ -92,7 +92,7 @@ function getFileContent(project, commitID, fname, callback){
 
 
 // Get the head of branch
-function getBranchInfo(project, branch, callback){
+function getBranchHead(project, branch, callback){
 
 	// Form query
 	endpoint = "projects/" + project + 
@@ -122,9 +122,9 @@ function getCommitInfo(project, commitID, callback){
 
 
 // Get the head of a branch
-function getParentInfo(project, branch, callback){
+function getBranchInfo(project, branch, callback){
 
-	getBranchInfo(project, branch, function(result){
+	getBranchHead(project, branch, function(result){
 		// Get the details of the base branch
 		getCommitInfo(project, result.revision, function(result){
 			callback(result)

@@ -58,10 +58,9 @@ function createSignedCommit(commitInfo, callback){
 
 
 //create a new commit and push to the server
-function updateChangeBranch(author, parents, branch, 
-		changeNumber, commitMessage){
+function updateChangeBranch(author, parents, commitMessage){
 	// Get the tree hash, 
-	getTreeHash (repo_url, branch, changeNumber, function(treeHash){
+	getTreeHash (repo_url, parents, function(treeHash){
 
 		//Create a new signed 
 		createSignedCommit({
@@ -70,6 +69,7 @@ function updateChangeBranch(author, parents, branch,
 			author:author,  
 			commitMessage:commitMessage
 		}, function (signedCommit){
+			console.log(signedCommit)
 			//push the commit to the server
 			//pushCommit (changeNumber, parents[0], signedCommit)
 		});
@@ -194,8 +194,7 @@ function run(){
 				*/
 
 				// 1st approach complains about missing objects
-				updateChangeBranch(author, parents, branch,
-					changeNumber, commitMessage)
+				updateChangeBranch(author, parents, commitMessage)
 
 				/*/ 2nd approach works for now
 				amendChangeBranch (change_id, 
