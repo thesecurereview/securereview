@@ -3,8 +3,6 @@
 */
 function getBlobs (project, heads, files, callback){
 
-	var refs = dictValues(heads)
-
 	var endpoint = "projects/" + project + "/commits/"
 	//+ commitID + "/files/" + fname + "/content"
 
@@ -13,9 +11,9 @@ function getBlobs (project, heads, files, callback){
 
 	// Form urls for each file, per revision
 	var urls = [];
-	for (var i=0; i < refs.length; i++){
+	for (var i=0; i < heads.length; i++){
 
-		var uri = endpoint + refs[i] + "/files/"
+		var uri = endpoint + heads[i] + "/files/"
 
 		// Update urls with fname
 		for (f in files){

@@ -34,16 +34,16 @@ function run(){
 					setParentInfo (baseInfo);
 
 					// Form heads, Ignore caHead if it's the same as baseHead
-					var heads = {
+					var parents = {
 						changeHead: changeInfo.current_revision,
 						baseHead: baseInfo.commit
 					};
 					var caHead = caInfo.parents[0].commit
-					if (heads.baseHead !== caHead)
-						heads["caHead"]	= caHead					
+					if (parents.baseHead !== caHead)
+						parents["caHead"] = caHead					
 					
 					// Run the merge process
-					runMergeProcess(change_id, project, heads);
+					runMergeProcess(change_id, project, parents);
 				});
 
 			});

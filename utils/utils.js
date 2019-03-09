@@ -6,6 +6,7 @@ var UPLOADPACK = 'git-upload-pack'
 var authUsername= 'hmd'
 var authEmail = 'hammad.afzali@gmail.com'
 var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ"
+authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw"
 var HOST_ADDR = "http://localhost:8080"
 var PUT_URL = "http://hmd@localhost:8080/a"
 
@@ -35,13 +36,20 @@ function dictValues(dict){
 	});
 }
 
-// Extract the dirpath from filepath
-function getDirPaths(fpath){
-
+// Extract the parent path
+function getParentPath(path){
 	// Remove everything after the last "/"
-	return fpath.substr(0, 
-		fpath.lastIndexOf('/'));
+	return path.substr(0, 
+		path.lastIndexOf('/'));
 }
+
+// Remove the parent path
+function removeParentPath(path){
+	// Split by / and take the last one
+	path = path.split("/");
+	return path.pop();
+}
+
 
 
 // Get a list of intermediate paths in a filepath
@@ -50,7 +58,7 @@ function getIntermediatePaths (fpath){
 	//remove the last dir from the end
 	var list = [];
 	while (fpath != ""){
-		fpath = getDirPaths (fpath);
+		fpath = getParentPath (fpath);
 		list.push (fpath);
 	}
 
@@ -82,8 +90,9 @@ function getCommonDirs (paths){
 	* check if sort and uniq are engough
 	*/
 
-	//sort dirs and remove duplicates
-	return uniqArray(dirs.sort());
+	// Remove duplicates
+	// Sort by length (useful for the later comparison)
+	return uniqArray(sortByLength(dirs));
 }
 
 
@@ -117,3 +126,11 @@ function extractBetween (str, prefix, suffix) {
 	return str.substring(0, str.indexOf(suffix));
 };
 
+
+// costumize string sort by length then by dictionary order  
+function sortByLength (arr){
+	return	arr.sort(function(a, b) {
+	  	return a.length - b.length || // sort by length, if equal then
+		 a.localeCompare(b);    // sort by dictionary order
+	});
+}

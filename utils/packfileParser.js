@@ -43,16 +43,12 @@ var listPack = async function (stream, onData) {
 			inflator.push(chunk, false)
 			
 		      	if (inflator.err) {
-				throw new GitError(E.InternalFail, {
-				  	message: `Pako error: ${inflator.msg}`
-				})
+				throw new Error(`Pako error: ${inflator.msg}`)
 		      	}
 			
 		      	if (inflator.result) {
 				if (inflator.result.length !== length) {
-					throw new GitError(E.InternalFail, {
-						message: `Inflated object size is different from that stated in packfile.`
-					})
+					throw new Error(`Inflated object size is different from that stated in packfile.`)
 				}
 
 				// Backtrack parser to where deflated data ends

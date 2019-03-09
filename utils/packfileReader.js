@@ -231,7 +231,6 @@ var readFromPack = async function (pack) {
 				type: type,
 				content: objectReader (type, object)
 			}
-
 		} catch (err) {
 			console.log('ERROR', err)
 			continue

@@ -50,34 +50,70 @@ function differentiate_blobs (files){
 }
 
 
+// Parse an array of Git objects to extract blob and trees
+function getTrees(objects, parents, changed_dirs){
+
+	// Get base, change and ca commits
+	/*/ TODO: Check if the object type is commit, otherwise raise an error 
+	let baseCommit = objects[parents.baseHead].type === "commit" ? 
+			objects[parents.baseHead].content : throw new Error('Head commit for the base branch is not fetched')
+	let changeCommit = objects[parents.changeHead].type === "commit" ?
+			objects[parents.changeHead].content : throw new Error('Head commit for the change branch is not fetched')
+	*/
+
+	let baseCommit = objects[parents.baseHead].content;
+	let changeCommit = objects[parents.changeHead].content;
+
+	// Get trees/subtrees in the base/master branch
+	let baseTreeHash = parseCommitObject(baseCommit).tree
+	let baseTrees =  objectPraser(objects, baseTreeHash, changed_dirs)
+
+	// Get trees/subtrees in the change branch
+	let changeTreeHash = parseCommitObject(changeCommit).tree
+	let changeTrees =  objectPraser(objects, changeTreeHash, changed_dirs)
+
+	return [baseTrees, changeTrees]
+}
+
+
+
 /**
 * Run the merge process 
 */
-function runMergeProcess(change_id, project, heads){
+var runMergeProcess = async function (change_id, project, parents){
 
-	// Get the status of changed files in the change branch
-	getRevisionFiles(change_id, heads.changeHead, function(result){
+	let repo_url = HOST_ADDR + "/" + project
+	var heads = dictValues(parents)
 
-		//differentiate files between change and base branches
-		var [added_files, deleted_files, modified_files] = 
-			differentiate_blobs(result);
+	fetchObjects( {repo_url, heads}, ({ objects }) => {
+		
+		// Get the status of changed files in the change branch
+		getRevisionFiles(change_id, parents.changeHead, function(result){
 
-		// Find involved trees/subtrees in the merge
-		var paths = added_files.concat(
-			deleted_files, modified_files);
+			//differentiate files between change and base branches
+			var [added_files, deleted_files, modified_files] = 
+				differentiate_blobs(result);
 
-		// Creat a uniq list of involved trees
-		var changed_dirs = getCommonDirs (paths);
+			// Find involved trees/subtrees in the merge
+			var paths = added_files.concat(
+				deleted_files, modified_files);
 
+			// Creat a uniq list of involved trees
+			var changed_dirs = getCommonDirs (paths);
 
-		// Get modified blobs for ca, base, pr
-		getBlobs(project, heads, modified_files, 
-			function(result){
-				console.log(result)
-			}
-		);
+			// Go through already retrieved objects
+			// TODO: Make sure all needed treea are fetched 
+			var [baseTrees, changeTrees] = 
+				getTrees(objects, parents, changed_dirs)		
 
-		//TODO: get the CA tree hash = parent of the first commit
+			// Get modified blobs for ca, base, pr
+			// TODO: Check if blobs are already fetched, if so get them in the previous step
+			getBlobs(project, parents, modified_files, 
+				function(result){
+					console.log(result)
+				}
+			);
+		});
 	});
 
 }

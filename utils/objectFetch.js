@@ -51,7 +51,7 @@ function wantPackLine ({
 /**
 * Fetch Git objects from the server
 */
-function fetchObjects({ repo_url, heads, refs }, callback){
+var fetchObjects = async function({ repo_url, heads, refs }, callback){
 	
 	// Set upload service 
 	var service = UPLOADPACK
@@ -87,7 +87,7 @@ function fetchObjects({ repo_url, heads, refs }, callback){
 		)
 	  	var caps = ` ${capabilities.join(' ')}`
 		
-		//Check if heas are provided, otherwise take  from refs
+		//Check if heas are provided, otherwise take from refs
 		let wants = [];
 		if (!heads) {
 			for (i in refs){
@@ -129,8 +129,8 @@ function fetchObjects({ repo_url, heads, refs }, callback){
 				let packfileSha = toHexString(packfile.slice(-20))
 
 				// Read the packfile data
-				readFromPack(packfile).then(function(result){
-					callback(result)
+				readFromPack(packfile).then(function(objects){
+					callback({ objects })
 				});
 			}
 		);
@@ -158,8 +158,7 @@ function getTreeHash(repo_url, heads, callback){
 
 	//let refs = ["master", "refs/changes/43/43/3"]
 	// Assume we have the parent, and want the head
-	fetchObjects( {repo_url, heads}, 
-		function(objects){
+	fetchObjects( {repo_url, heads}, ({ objects }) => {
 			// Parse the commit object
 			var commit = objects[heads[0]].content
 			callback(parseCommitObject(commit).tree)

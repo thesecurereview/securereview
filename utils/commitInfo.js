@@ -163,11 +163,47 @@ function extractParents (commitInfo){
 	return parents
 }
 
-//Extract the fpath and ref name of fetched blob
+// Extract the fpath and ref name of fetched blob
 function getBlobInfo (item){
 	var head = extractBetween(item, "commits/", "/files")
 	var fpath = extractBetween(item, "files/", "/content")
 
 	return [filePathUnTrim(fpath), head];
 }
+
+
+// Parse an array of Git objects to extract blob and trees
+function objectPraser(objects, rootTreeHash, dirs){
+
+	// Get the tree corresponding to the root directory 
+	// and remove it from dirs
+	let trees = {
+		"":objects[rootTreeHash].content
+	}
+
+	// Changed dirs are sorted by length, in a dictionary order
+	// Thus, going through changed dirs, 
+	// we can make sure that parent directories are visited first
+	// To do so, we take a counter and traverse the dirs
+	let counter = 1
+	while (dirs.length > counter){
+		let dirPath = dirs[counter]
+		let parent = getParentPath (dirPath)
+		let dir = removeParentPath (dirPath)	
+		try{
+			let treeHash = trees[parent][dir].oid
+			trees [dirPath] = objects[treeHash].content
+		}
+		catch(err) {
+			console.log(err)
+		}
+		
+		counter++;
+	}
+
+	return trees
+}
+
+
+
 

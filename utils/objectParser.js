@@ -8,16 +8,16 @@ function mode2type (mode) {
 		case '120000': return 'blob'
 		case '160000': return 'commit'
 	}
-	throw new GitError(E.InternalFail, {
-		message: `Unexpected GitTree entry mode: ${mode}`
-	})
+	throw new Error ( `Unexpected GitTree entry mode: ${mode}`)
 }
 
 
 // Parse Tree Object
 function parseBuffer (buffer) {
-	let entries = []
+	let entries = {}
 	let cursor = 0
+
+	//TODO: find a better solution to keep track of trees
 
 	while (cursor < buffer.length) {
 
@@ -50,7 +50,8 @@ function parseBuffer (buffer) {
 		//Entry oid
 		let oid = buffer.slice(nullchar + 1, nullchar + 21).toString('hex')
 
-		entries.push({ mode, path, oid, type })
+		// Keep track of path
+		entries[path] = { mode, path, oid, type }
 		
 		//read next entry
 		cursor = nullchar + 21
@@ -70,12 +71,13 @@ function objectReader(type, buffer){
 	let i = buffer.indexOf(0) // first null value
 	// TODO: verify buffer length
 	let actualLength = buffer.length - (i + 1)*/
-
+	
+	
 	let unwrap
 	if (type == "tree")
-		unwrap = parseBuffer (buffer)
+		return parseBuffer (buffer)
 	else
-		unwrap = buffer.toString('utf8')
+		return buffer.toString('utf8')
 
-	return unwrap
+	
 }
