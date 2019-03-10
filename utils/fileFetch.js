@@ -1,7 +1,7 @@
 /**
 * Fetch multiple blobs at once
 */
-function getBlobs (project, heads, files, callback){
+var getBlobs = async function (project, heads, files, callback){
 
 	var endpoint = "projects/" + project + "/commits/"
 	//+ commitID + "/files/" + fname + "/content"
@@ -28,7 +28,6 @@ function getBlobs (project, heads, files, callback){
 	var blobContents = {};
 	mutliCallback = function(data) {
 		for(var item in data){
-
 			//var info = JSON.parse(data[item]);
 			var info = data[item];
 
@@ -42,6 +41,7 @@ function getBlobs (project, heads, files, callback){
 
 			// Store content of file per ref (content is base64 decoded)
 			blobContents [fpath][head] = atob(info);
+
 		}
 
 		// All blobs are fetched, callback

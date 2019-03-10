@@ -1,43 +1,3 @@
-
-/* create a new tree object*/
-function createTreeObejct(tree_entries){
-
-	/*
-	* tree [content size]\0[Object Entries]
-	* [mode] [Object name]\0[SHA-1 of referencing blob or tree]
-	* obj=[mode, type, hash, name]
-	* mode: 40000    
-	*/
-
-	/*extract fname from fpath
-	FIXME It should be done at the first place*/
-	for (let i = 0; i <tree_entries.length; i++) {
-
-		let entry = tree_entries[i]
-		//modify the fpath with fname
-		let fileName = get_file_name(entry [3]);		
-		entry [3] = fileName;
-
-		tree_entries[i] = entry
-	}
-
-	/*Sort the tree before rehashing*/
-	tree_entries = tree_entries.sort(compare_by_column);	
-
-	/*FIXME remove the warp function and 
-	make tree_entries compatible with treeObject
-	*/
-	tree_entries = wrap_tree_entries(tree_entries)
-
-	var type = "tree";
-	var obj = get_object(type, tree_entries);
-	
-	objects.push([type, obj.object]);
-
-	return obj.id;
-}
-
-
 /**
 * Get new commit/blob objects
 * content = commit, blob, tree_entries
@@ -80,6 +40,32 @@ function createGitObject(type, content){
 }
 
 
+/* create a new tree object*/
+function createTreeObejct(tree_entries){
+
+	/*
+	* tree [content size]\0[Object Entries]
+	* obj=[mode, type, hash, name]
+	* [mode] [Object name]\0[SHA-1 of referencing blob or tree]
+	* mode: 40000    
+	*/
+
+	/*/TODO: Make sure entries are sorted
+	// Convert dict to array, sort it then recreate dict
+	tree_entries = unwrap_tree_entries(tree_entries)	
+	tree_entries = tree_entries.sort(compare_by_column);
+	tree_entries = wrap_tree_entries(tree_entries)	
+	*/	
+
+	var type = "tree";
+	var obj = createGitObject(type, tree_entries);
+	
+	objects.push([type, obj.object]);
+
+	return obj.id;
+}
+
+
 /**
 * Get object hash
 */
@@ -94,7 +80,7 @@ function getObjectHash(object_wrap){
 
 
 /**
-* create the commit object
+* Form the commit 
 */
 function formCommit(treeHash, author, parents, message){
 
@@ -127,7 +113,7 @@ function formCommit(treeHash, author, parents, message){
 
 
 /**
-* create the commit header
+* Form the commit header
 */
 function formCommitHeaders (obj) {
 
@@ -167,7 +153,7 @@ function formCommitHeaders (obj) {
 
 
 /**
-* Form a signed commit
+* Form signed commit
 */
 function formSignedCommit(commit, signature){
 
@@ -183,7 +169,7 @@ function formSignedCommit(commit, signature){
 
 
 /**
-* extract the commit's signature
+* Extract the commit's signature
 */
 function isolateSignature (commit) {
 	
@@ -199,231 +185,24 @@ function isolateSignature (commit) {
 }
 
 
-/**
-* Determine timestamp and offset zone
-*/
-function determineTime () {
-	let authorDateTime = new Date()
-	let timestamp = Math.floor(authorDateTime.valueOf() / 1000)
-	//get zone offset in minutes 
-	let timezoneOffset = authorDateTime.getTimezoneOffset()
+// Create a sign commit object
+function createSignedCommit(commitInfo, callback){
 
-	return [timestamp, timezoneOffset]
-}
+	// Form the commit 	
+	var commit = formCommit(commitInfo.treeHash, commitInfo.author, 
+		commitInfo.parents, commitInfo.commitMessage)
 
+	// Sing the commit and then form signed commit
+	signContent(authUsername, commit, function(result){
 
-/**
-* convert zone offset from minutes to hours
-*/
-function formatTimezoneOffset (minutes) {
+		// Take the commit signature
+		// Since the commitMessage itself has signature
+		// We take the last signature as the commit signature
+		// This approach should work, but FIXME: make sure about it 
+		var signature = isolateSignature (result);
 
-	let sign = simpleSign(negateExceptForZero(minutes))
-	minutes = Math.abs(minutes)
-	let hours = Math.floor(minutes / 60)
-	minutes -= hours * 60
-	let strHours = String(hours)
-	let strMinutes = String(minutes)
-	if (strHours.length < 2) strHours = '0' + strHours
-	if (strMinutes.length < 2) strMinutes = '0' + strMinutes
-
-	return (sign === -1 ? '-' : '+') + strHours + strMinutes
-}
-
-
-/**
-* create the signed commit
-*/
-
-/**
-* normalize a string
-*/
-function normalize (str) {
-
-	// remove all <CR>
-	str = str.replace(/\r/g, '')
-	// no extra newlines up front
-	str = str.replace(/^\n+/, '')
-	// and a single newline at the end
-	str = str.replace(/\n+$/, '') + '\n'
-	return str
-}
-
-function normalizeText (str) {
-
-	// remove all <CR>
-	str = str.replace(/\r/g, '')
-	// no extra newlines up front
-	str = str.replace(/^\n+/, '')
-	// 
-	str = str.replace(/\n+$/, '')
-	return str
-}
-
-
-
-function indent (str) {
-	return (
-		str.trim()
-		.split('\n')
-		.map(x => ' ' + x)
-		.join('\n') + '\n'
-	)
-}
-
-
-function outdent (str) {
-	return str.split('\n')
-	.map(x => x.replace(/^ /, ''))
-	.join('\n')
-}
-
-
-function negateExceptForZero (n) {
- 	return n === 0 ? n : -n
-}
-
-
-function simpleSign (n) {
-	return Math.sign(n) || (Object.is(n, -0) ? -1 : 1)
-}
-
-
-function comMessage (commit) {
-	return normalize(commit.slice(commit.indexOf('\n\n') + 2))
-}
-
-
-function comHeader (commit) {
-	return commit.slice(0, commit.indexOf('\n\n'))
-}
-
-
-
-/*concatinate two arrays and remove duplicates */
-function array_concat(a, b){
-
-	return a.concat(b.filter(function (item) {
-	    return a.indexOf(item) < 0;
-	}));
-}
-
-/*remove duplicate elements*/
-function uniq(array) {
-	return array.filter(function(element, index, self) {
-    		return index == self.indexOf(element);
+		//Form signed commit
+		callback (formSignedCommit(commit, signature));
 	});
 }
-
-
-/*Extract the fpath and ref name of the blob*/
-function blob_info (item){
-
-	return [item.match(/files\/(.*?)\/raw/i)[1],
-		item.substring(item.indexOf('ref=') + 4)];
-}
-
-
-/*Blob contents are in the string format
-* create a buffer*/
-var string_ArrayBuffer = function(str) {
-	return {
-		ptr: Uint16Array.from(str, function(x, i) {
-			return str.charCodeAt(i)}
-		),
-
-		size: Uint16Array.from(str, function(x, i) {
-			return str.charCodeAt(i)}).length
-	}
-}
-
-/*convert hex to bytes*/ 
-function hex_to_bytes(hex) {
-	var bytes = []
-	for (i = 0; i < hex.length; i+=2) {
-		var ch = parseInt(hex.substr(i, 2), 16);
-		bytes.push(ch); 
-	}
-	res = new Uint8Array(bytes);
-	return res.buffer;
-}
-
-/*
- * it does so by iterating over the entries and adding up the mode length
- * and the length of the filename (+20 chars for sha1). The reason as to why
- * we can't use just.length is in the FIXME below.
- */
-
-/*Helper method to compute the tree length */
-var compute_tree_length = function(entries) {
-	var result = 0;
-	for (var i = 0; i < entries.length; i++)
-		result += (entries[i][0].toString(8) + 
-			" " + entries[i][3] + "\0").length + 20;
-
-	return result;
-}
-
-
-/*sort a 2-dim-array by the 2nd column*/
-function compare_by_column(a, b){
-	if (a[3] === b[3]) {
-		return 0;
-	}
-	else {
-		return (a[3] < b[3]) ? -1 : 1;
-	}
-}
-
-
-
-/*Convert array of tree entries to array of dictionary*/
-function wrap_tree_entries (entries){
-
-	var keys = ["mode", "type", "id", "path"];
-	var result = [];
-
-	for (let entry of entries) {
-
-		var tmp = {}
-		for (let i = 0; i<keys.length; i++) {
-			tmp[keys[i]] = entry[i];
-		}
-		result.push(tmp)
-	}
-
-	return result;
-}
-
-
-/*parse the tree content*/
-function unwrap_tree_entries (entries){
-	
-	/*
-	* current format: obj = {id:"", mode:"", name:"", path:"", type:""}
-	* desired format: array = [mode, type, id, name]
-	*/
-
-	var unwrap_tree = []; 
-	for (i in entries){
-
-		var entry = [];
-		var mode = entries[i].mode;
-
-		/*omit the first char of the tree mode*/
-		if  (entries[i].type == 'tree'){
-			mode = mode.substr(1);
-		}
-
-		/*create the tree entry*/
-		entry.push(mode);
-		entry.push(entries[i].type);
-		entry.push(entries[i].id);
-		entry.push(entries[i].path);
-		unwrap_tree.push(entry);
-	}
-
-	return unwrap_tree;
-}
-
-
 

@@ -1,8 +1,8 @@
-
 //Get tree entry mode
 function mode2type (mode) {
 	switch (mode) {
-		case '040000': return 'tree'
+		//case '040000': return 'tree'
+		case '40000': return 'tree'
 		case '100644': return 'blob'
 		case '100755': return 'blob'
 		case '120000': return 'blob'
@@ -13,7 +13,7 @@ function mode2type (mode) {
 
 
 // Parse Tree Object
-function parseBuffer (buffer) {
+function parseTreeObject (buffer) {
 	let entries = {}
 	let cursor = 0
 
@@ -38,8 +38,8 @@ function parseBuffer (buffer) {
 		}
 
 		let mode = buffer.slice(cursor, space).toString('utf8')
- 		// makes it line up neater in printed output
-		if (mode === '40000') mode = '040000'
+		//omit the first char of the tree mode
+		if (mode === '040000') mode = '40000'
 
 		//Entry type
 		let type = mode2type(mode)
@@ -72,12 +72,88 @@ function objectReader(type, buffer){
 	// TODO: verify buffer length
 	let actualLength = buffer.length - (i + 1)*/
 	
-	
 	let unwrap
 	if (type == "tree")
-		return parseBuffer (buffer)
+		return parseTreeObject (buffer)
 	else
 		return buffer.toString('utf8')
 
 	
 }
+
+
+// Parse an array of Git objects to extract trees
+function formTrees(objects, rootTreeHash, dirs){
+
+	// Get the tree corresponding to the root directory 
+	// and remove it from dirs
+	let trees = {
+		"":objects[rootTreeHash].content
+	}
+
+	// Changed dirs are sorted by length, in a dictionary order
+	// Thus, going through changed dirs, 
+	// we can make sure that parent directories are visited first
+	// To do so, we take a counter and traverse the dirs
+	let counter = 1
+	while (dirs.length > counter){
+		let dirPath = dirs[counter]
+		let parent = getParentPath (dirPath)
+		let dir = removeParentPath (dirPath)	
+		try{
+			let treeHash = trees[parent][dir].oid
+			trees [dirPath] = objects[treeHash].content
+		}
+		catch(err) {
+			console.log(err)
+		}
+		
+		counter++;
+	}
+
+	return trees
+}
+
+
+// Parse a commit object
+function parseCommitObject(object){
+
+	var treeHash = object.slice(
+		object.indexOf('tree ') + 5, 
+		object.indexOf('\nparent')
+	)	
+
+	//TODO: extract other fields
+	return {
+		tree: treeHash
+	}
+}
+
+
+// Parse an array of Git objects to extract blob and trees
+function getTrees(objects, parents, changed_dirs){
+
+	/*/ TODO: Check if the object type is commit, 
+	// otherwise raise an error 
+	let baseCommit = objects[parents.baseHead].type === "commit" ? 
+			objects[parents.baseHead].content : 
+			throw new Error('Head commit for the base branch is not fetched')
+	let changeCommit = objects[parents.changeHead].type === "commit" ?
+			objects[parents.changeHead].content : 
+			throw new Error('Head commit for the change branch is not fetched')
+	*/
+
+	let baseCommit = objects[parents.baseHead].content;
+	let changeCommit = objects[parents.changeHead].content;
+
+	// Get trees/subtrees in the base/master branch
+	let baseTreeHash = parseCommitObject(baseCommit).tree
+	let baseTrees =  formTrees(objects, baseTreeHash, changed_dirs)
+
+	// Get trees/subtrees in the change branch
+	let changeTreeHash = parseCommitObject(changeCommit).tree
+	let changeTrees =  formTrees(objects, changeTreeHash, changed_dirs)
+
+	return [baseTrees, changeTrees]
+}
+

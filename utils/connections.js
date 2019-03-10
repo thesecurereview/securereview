@@ -181,6 +181,7 @@ function get_req(repo_url, service, auth, callback){
 	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
 
 	let headers = {}
+	//FIXME Add OAuth
 	if (auth) {
 		headers['Authorization'] = basicAuth(auth)
 	}
@@ -190,12 +191,11 @@ function get_req(repo_url, service, auth, callback){
 	request("GET", repo_url, headers, function(res){
 		if (res.statusCode !== 200) {
 			throw new Error(
-			`HTTP Error: ${res.statusCode}`)
+			`HTTP Error: ${res.statusCode} ${res.statusMessage}`)
 		}
-		callback(res.body)
+		callback (parseGETResponse(res.body, service))
 	})
 }
-
 
 // POST request by service
 var post_req = async function (repo_url, service, auth, stream, callback) {
@@ -229,35 +229,6 @@ var post_req = async function (repo_url, service, auth, stream, callback) {
 			callback (res.body)
 		}
 	);
-
-}
-
-
-/**
-* Discover the server
-*/
-var discover = async function ({ service, repo_url, auth }, callback) {
-
-	if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
-
-	let headers = {}
-	//FIXME Add OAuth
-	if (auth) {
-		headers['Authorization'] = basicAuth(auth)
-	}
-	
-	//Send GET request
-	request("GET", `${repo_url}/info/refs?service=${service}`, 
-		headers, function(res){
-
-		if (res.statusCode !== 200) {
-			throw new Error(
-			`HTTP Error: ${res.statusCode} ${res.statusMessage}`)
-		}
-
-		/*parse the response and then callback*/
-		callback (parseGETResponse(res.body, service))
-	});
 
 }
 
@@ -497,3 +468,30 @@ function parseChangeInfo (data){
 }
 
 
+//Form caps
+function formCaps (capabilities){
+	/*
+	* Filter capabilities 
+	* If 'side-band' capability is  not specified, 
+	* the server will stream the entire packfile without multiplexing.
+	*/ 
+	capabilities = computeIntersect(capabilities,
+		[
+		// multi_ack allows the server to return "ACK obj-id continue" 
+		// as soon as it finds a commit that it can use as a common base
+		/*'multi_ack' */
+		//multi_ack_detailed is an extension of multi_ack 
+		//that permits client to better understand the server's in-memory state
+		'multi_ack_detailed', 
+		//no-done allows the sender to immediately send a pack following its first "ACK obj-id ready" message.
+		'no-done'
+		/*'side-band-64k',
+		//A thin_pack is one with deltas which reference base objects not contained within the pack
+		'thin-pack',
+		//client can understand PACKv2 with delta referring to its base by position in pack rather than by an obj-id.
+		'ofs-delta', 
+		`agent=${agent}`*/
+		]
+	)
+  	return ` ${capabilities.join(' ')}`
+}

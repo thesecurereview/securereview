@@ -47,16 +47,17 @@ function embedReviewUnit(change_id, commitMessage, reviewUnit){
 	// - Replace the Change-Id with Signed Review
 	// - Add the change id
 
+	//TODO move it to objectUtil
 	var cidKey = "Change-Id:"
 	var idx = commitMessage.lastIndexOf(cidKey);	
-	var lasLine = commitMessage.substring(idx, idx+52);
+	var lastLine = commitMessage.substring(idx, idx+52);
 
 	// Remove the last two lines
 	commitMessage = commitMessage.substring(0, idx-1);
 
 	// - Amend the commit message with reviewUnit
 	// - Add the change_id  
-	return commitMessage + `${reviewUnit}\n${lasLine}\n`
+	return commitMessage + `${reviewUnit}\n${lastLine}\n`
 }
 
 

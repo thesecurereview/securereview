@@ -501,7 +501,7 @@ var clear_all = function() {
  * @param  {user_id} take it to retrieve priv key
  * @return {String} singed message pgp_message
  */
-function signMessage (user_id, data, callback){
+function signContent (user_id, data, callback){
 
 	/*FIXME: For the porpuse of the prototype we assume a id*/
 	var user_id = "safereview";

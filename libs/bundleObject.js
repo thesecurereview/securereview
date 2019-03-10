@@ -27,9 +27,9 @@ window.treeObject = function (tree_entries) {
 			let space = Buffer.from(' ')
 			let path = Buffer.from(entry.path, { encoding: 'utf8' })
 			let nullchar = Buffer.from([0])
-			let id = Buffer.from(entry.id.match(/../g).map(n => parseInt(n, 16)))
+			let oid = Buffer.from(entry.oid.match(/../g).map(n => parseInt(n, 16)))
 
-			return Buffer.concat([mode, space, path, nullchar, id])
+			return Buffer.concat([mode, space, path, nullchar, oid])
 		})
 	)
 

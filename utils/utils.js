@@ -6,13 +6,18 @@ var UPLOADPACK = 'git-upload-pack'
 var authUsername= 'hmd'
 var authEmail = 'hammad.afzali@gmail.com'
 var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ"
-authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw"
+//authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw"
 var HOST_ADDR = "http://localhost:8080"
 var PUT_URL = "http://hmd@localhost:8080/a"
 
 var auth = {
 	username: authUsername,
 	password: authPassword
+}
+
+var author = {
+	name:authUsername, 
+	email:authEmail
 }
 
 // Compute the intersect between two arrays
@@ -134,3 +139,27 @@ function sortByLength (arr){
 		 a.localeCompare(b);    // sort by dictionary order
 	});
 }
+
+
+// sort a 2-dim-array by the 2nd column
+function compare_by_column(a, b){
+	if (a[3] === b[3]) {
+		return 0;
+	}
+	else {
+		return (a[3] < b[3]) ? -1 : 1;
+	}
+}
+
+
+/*convert hex to bytes*/ 
+function hex_to_bytes(hex) {
+	var bytes = []
+	for (i = 0; i < hex.length; i+=2) {
+		var ch = parseInt(hex.substr(i, 2), 16);
+		bytes.push(ch); 
+	}
+	res = new Uint8Array(bytes);
+	return res.buffer;
+}
+

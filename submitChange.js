@@ -4,7 +4,6 @@
 - 
 */
 var url;
-var repo_url;
 
 /**
 * Run the submitting merge by 
@@ -14,16 +13,17 @@ function run(){
 
 	// Get change number
 	var cn = getChangeNumber (url)
+
+	// Get a summary of change
 	getChangeSummary(cn, function(result){
 		var project = result.project
 		var branch = result.branch
 		var change_id = result.change_id
-		var changeNumber = result._number
+		//var changeNumber = result._number
 
 		//TODO: sync the following API calls
 		// Get info: change branch
 		getRevisionReview(change_id, "current", function(changeInfo){
-
 
 			// Get info: common ancestor (parent of the 1st commit in change branch)
 			getRevisionCommit(change_id, "1", function(caInfo){
@@ -43,7 +43,16 @@ function run(){
 						parents["caHead"] = caHead					
 					
 					// Run the merge process
-					runMergeProcess(change_id, project, parents);
+					runMergeProcess(change_id, project, parents,
+						function(treeHash, objects){
+							//FIXME: Extract commitMessage
+							var commitMessage = `Merge a change\n\n ${change_id}`
+							//remove ca from parents
+							parents = [parents.baseHead, parents.changeHead]
+							pushCommit({ project, branch, //changeNumber
+								objects, parents, treeHash, commitMessage })
+						}
+					);
 				});
 
 			});
@@ -54,13 +63,6 @@ function run(){
 
 }
 
-
-/**
-* Push the merge commit to the server
-*/
-function pushCommit(){
-
-}
 
 
 // Event Listeners

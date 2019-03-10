@@ -8,76 +8,6 @@
 */
 
 var url;
-var repo_url;
-
-
-// Push commit to the server
-function pushCommit(changeNumber, oldHead, commit){
-
-	// Create new signed commit
-	var type = "commit";
-	var obj = createGitObject(type, commit);
-	var newHead = obj.id;
-
-
-	var objects = [];
-	objects.push([type, obj.object]);
-
-	// Call send-pack to update the change branch
-	sendPackLine(repo_url, auth, changeNumber, 
-		newHead, oldHead, objects, 
-		function(result){ 
-			console.log(result)
-			parseSendPackResult (result)
-		}
-	);
-
-}
-
-
-// Create a sign commit object
-function createSignedCommit(commitInfo, callback){
-
-	// Form the commit 	
-	var commit = formCommit(commitInfo.treeHash, commitInfo.author, 
-		commitInfo.parents, commitInfo.commitMessage)
-
-	// Sing the commit and then form signed commit
-	signMessage(authUsername, commit, function(result){
-
-		// Take the commit signature
-		// Since the commitMessage itself has signature
-		// We take the last signature as the commit signature
-		// This approach should work, but FIXME: make sure about it 
-		var signature = isolateSignature (result);
-
-		//Form signed commit
-		callback (formSignedCommit(commit, signature));
-	});
-}
-
-
-//create a new commit and push to the server
-function updateChangeBranch(author, parents, commitMessage){
-	// Get the tree hash, 
-	getTreeHash (repo_url, parents, function(treeHash){
-
-		//Create a new signed 
-		createSignedCommit({
-			treeHash:treeHash,
-			parents:parents,
-			author:author,  
-			commitMessage:commitMessage
-		}, function (signedCommit){
-			console.log(signedCommit)
-			//push the commit to the server
-			//pushCommit (changeNumber, parents[0], signedCommit)
-		});
-
-	});
-}
-
-
 
 /**
 * From a review unit to store the reviews
@@ -88,7 +18,7 @@ function storeReviewUnit (change_id, review, commitMessage, callback){
 	var reviewUnit = formReviewUnit (change_id, review);
 
 	// Sign review
-	signMessage(authUsername, reviewUnit, function(result){
+	signContent(authUsername, reviewUnit, function(result){
 
 		// Embed signed reviewUnit in commitMessage
 		commitMessage = embedReviewUnit(
@@ -157,9 +87,6 @@ function run(){
 		var change_id = result.change_id
 		var changeNumber = result._number
 
-		// Form the repo URL
-		repo_url = HOST_ADDR + "/" + project
-
 		// Get the latest commit in the change branch
 		getRevisionCommit(change_id, "current", function(commitInfo){
 
@@ -176,9 +103,6 @@ function run(){
 			// commit message
 			var commitMessage = commitInfo.message;
 
-			//FIXME get author info automatically
-			var author = {name:authUsername, email:authEmail};
-
 			// Extract the review info
 			var review = captureReview();
 
@@ -193,12 +117,15 @@ function run(){
 				* 2- Update the commit message of change branch using API
 				*/
 
-				// 1st approach complains about missing objects
-				updateChangeBranch(author, parents, commitMessage)
+				/*/ 1st approach complains about missing objects
+				var oldHead = parents[0]
+				getTreeHash (project, parents, function(treeHash){
+					 pushCommit({ project, changeNumber, //branch, objects,
+						parents, treeHash, commitMessage })
+				});*/
 
-				/*/ 2nd approach works for now
-				amendChangeBranch (change_id, 
-					review, commitMessage)*/
+				// 2nd approach works for now
+				amendChangeBranch (change_id, review, commitMessage)
 			})
 		});
 
