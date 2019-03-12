@@ -104,6 +104,9 @@ class GitPackIndex {
 
 		let object = null;
 		/*/ Handle deltified objects
+		// ofs-delta and ref-delta store the "delta" to be applied to another object
+		// ref-delta directly encodes 20-byte base object name.
+		// If the base object is in the same pack, ofs-delta encodes the offset of the base object
 		let base = null;
 		if (type === 'ofs_delta') {
 			let offset = decodeVarInt(reader);
@@ -144,6 +147,7 @@ var readFromPack = async function (pack) {
 		6: 'ofs-delta',
 		7: 'ref-delta'
    	}
+
    	let offsetToObject = {}
 
 	//let packfileSha = pack.slice(-20).toString('hex')
@@ -169,7 +173,7 @@ var readFromPack = async function (pack) {
 			  type,
 			  offset
 			}
-		} else if (type === 'ofs-delta') {
+		}/* else if (type === 'ofs-delta') { //FIXME:
 			offsetToObject[offset] = {
 			  type,
 			  offset
@@ -179,7 +183,7 @@ var readFromPack = async function (pack) {
 			  type,
 			  offset
 			}
-		}
+		}*/
     	})
 
 	// We need to know the lengths of the slices to compute the CRCs.
@@ -195,6 +199,7 @@ var readFromPack = async function (pack) {
 		o.end = end
 	}
 
+	console.log(offsetToObject)
 	// Read Git index
 	const p = new GitPackIndex({
 		pack: Promise.resolve(pack),
