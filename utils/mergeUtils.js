@@ -51,7 +51,7 @@ function differentiate_blobs (files){
 
 
 // Merge all modified blobs
-function merge_blobs(file_contents, parents){
+function merge_blobs(blobContents, parents){
 
 	var new_content, blobs, parent_dir, bottom_tree;
 
@@ -60,21 +60,21 @@ function merge_blobs(file_contents, parents){
 	let ca_head = parents.hasOwnProperty("caHead") ? 
 			parents.caHead : base_head;
 
-	let updates = {}
-	for (fpath in file_contents){
+	let newBlobs = {}
+	for (fpath in blobContents){
 
 		// Get different versions of a blob
-		var blobs = file_contents[fpath];
+		var blobs = blobContents[fpath];
 
 		// Merge blobs
 		var new_content = merge_two_blobs (blobs[ca_head],
 			 blobs[base_head], blobs[pr_head]);
 
 		// Create a new blob object
-		updates[fpath] = createGitObject("blob", new_content);
+		newBlobs[fpath] = createGitObject("blob", new_content);
 	}
 
-	return updates;
+	return newBlobs;
 }
 
 

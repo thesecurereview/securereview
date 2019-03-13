@@ -1,28 +1,43 @@
-/**
-* Fetch multiple blobs at once
-*/
-var getBlobs = async function (project, heads, files, callback){
+// Form fileurls for a remote ref
+function fileUrls(project, head, files){
 
 	var endpoint = "projects/" + project + "/commits/"
 	//+ commitID + "/files/" + fname + "/content"
 
-	//Add repo URL to the endpoint
-	endpoint = `${HOST_ADDR}/${endpoint}`
+	//Add repo URL and branch head to the endpoint
+	endpoint = `${HOST_ADDR}/${endpoint}` + head + "/files/"
 
-	// Form urls for each file, per revision
-	var urls = [];
-	for (var i=0; i < heads.length; i++){
+	// Update urls with fname
+	let urls = [];
+	for (f in files){
+		//Trim the file path
+		f = filePathTrim(files[f])
 
-		var uri = endpoint + heads[i] + "/files/"
-
-		// Update urls with fname
-		for (f in files){
-			//Trim the file path
-			f = filePathTrim(files[f])
-
-			urls.push(uri + f + "/content");
-		}
+		urls.push(endpoint + f + "/content");
 	}
+
+	return urls
+} 
+
+
+// Form urls for all files need to be fetched 
+function formFileUrls (project, parents, 
+		added_files, modified_files){
+	
+	//TODO: use getBlobs in ./objectParser to check if the blob is already fetched
+	
+	// Get files: only modified for base branch, added and modified for change branch
+	let uris = fileUrls (project, parents.baseHead,
+			modified_files)
+	let urls = fileUrls (project, parents.changeHead, 
+			[...added_files, ...modified_files])
+
+	return [...uris, ...urls]
+}
+
+
+// Fetch multiple blobs at once
+var fetchBlobs = async function ({ urls } , callback){
 
 	// Get all blobs at once
 	var blobContents = {};
@@ -45,8 +60,10 @@ var getBlobs = async function (project, heads, files, callback){
 		}
 
 		// All blobs are fetched, callback
-		callback(blobContents)
+		callback ({ blobContents });
 	};
 
 	multipleAPICall(urls, mutliCallback);
 }
+
+

@@ -53,7 +53,7 @@ function createTreeObejct(tree_entries){
 	/*/TODO: Make sure entries are sorted
 	// Convert dict to array, sort it then recreate dict
 	tree_entries = unwrap_tree_entries(tree_entries)	
-	tree_entries = tree_entries.sort(compare_by_column);
+	tree_entries = tree_entries.sort(compareByColumn);
 	tree_entries = wrap_tree_entries(tree_entries)	
 	*/	
 

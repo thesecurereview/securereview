@@ -2,7 +2,6 @@
 function pushCommit({ project, changeNumber, branch, 
 		objects, parents, treeHash, commitMessage }){
 
-	console.log(objects)
 	//Create a new signed 
 	createSignedCommit({
 		treeHash:treeHash,
@@ -25,6 +24,7 @@ function pushCommit({ project, changeNumber, branch,
 			oldHead:parents[0], newHead:obj.id, objects }, 
 			function(result){ 
 				console.log(result)
+				//TODO: Prase the response and take action
 				//parseSendPackResult (result)
 			}
 		);
@@ -35,16 +35,16 @@ function pushCommit({ project, changeNumber, branch,
 
 
 // Get the tree hash of a commit object
-function getTreeHash(project, heads, callback){
+function getTreeHash(project, wants, callback){
 
 	//let refs = ["master", "refs/changes/43/43/3"]
 	// Assume we have the parent, and want the head
 
 	// Form the repo URL
 	var repo_url = HOST_ADDR + "/" + project
-	fetchObjects( {repo_url, heads}, ({ data }) => {
+	fetchObjects( {repo_url, wants}, ({ data }) => {
 			// Parse the commit object
-			var commit = data[heads[0]].content
+			var commit = data[wants[0]].content
 			callback(parseCommitObject(commit).tree)
 		}
 	);

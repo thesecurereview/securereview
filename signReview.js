@@ -38,6 +38,7 @@ function setReview(change_id, head, data){
 		"/revisions/" + head + "/review"
 	post_review_endpoint("POST", PUT_URL, endpoint, auth, data,
 		function (result){ 
+		//TODO: Prase the response and take action
 		//console.log(result)
 	})
 }

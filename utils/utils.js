@@ -3,10 +3,14 @@ var UPLOADPACK = 'git-upload-pack'
 
 //FIXME: Take user info automatically
 // OR Add OAuth
-var authUsername= 'hmd'
+//var authUsername= 'hmd'
+var authUsername= 'admin'
+
 var authEmail = 'hammad.afzali@gmail.com'
-var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ"
-//authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw"
+//var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ" //PC
+//var authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw" //Laptop
+var authPassword = "secret"
+
 var HOST_ADDR = "http://localhost:8080"
 var PUT_URL = "http://hmd@localhost:8080/a"
 
@@ -20,26 +24,6 @@ var author = {
 	email:authEmail
 }
 
-// Compute the intersect between two arrays
-function computeIntersect (a, b) {
-	return a.filter(value => -1 !== b.indexOf(value));
-}
-
-
-// Remove duplicate elements from an array
-function uniqArray(array) {
-	return array.filter(function(element, index, self) {
-    		return index == self.indexOf(element);
-	});
-}
-
-
-// Get the dictionary values
-function dictValues(dict){
-	return Object.keys(dict).map(function(key){
-	    return dict[key];
-	});
-}
 
 // Extract the parent path
 function getParentPath(path){
@@ -71,9 +55,7 @@ function getIntermediatePaths (fpath){
 }
 
 
-/**
-* Find subdirs in an array of paths
-*/
+// Find subdirs in an array of paths
 function getCommonDirs (paths){
 
 	/* FIXME: find a better solution
@@ -101,13 +83,6 @@ function getCommonDirs (paths){
 }
 
 
-function toHexString(byteArray) {
-  return Array.prototype.map.call(byteArray, function(byte) {
-    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-  }).join('');
-}
-
-
 // Replace all "/" occurrences with "%2F"
 function filePathTrim (fpath){
 	return replaceAll(fpath, '/', '%2F')
@@ -129,10 +104,50 @@ function replaceAll (str, find, update){
 function extractBetween (str, prefix, suffix) {
 	str = str.substring(str.indexOf(prefix) + prefix.length);
 	return str.substring(0, str.indexOf(suffix));
-};
+}
 
 
-// costumize string sort by length then by dictionary order  
+// Compute the intersect between two arrays
+function computeIntersect (a, b) {
+	return a.filter(value => -1 !== b.indexOf(value));
+}
+
+
+// Remove duplicate elements from an array
+function uniqArray(array) {
+	return array.filter(function(element, index, self) {
+    		return index == self.indexOf(element);
+	});
+}
+
+
+// Get the dictionary values
+function dictValues(dict){
+	return Object.keys(dict).map(function(key){
+	    return dict[key];
+	});
+}
+
+
+// Check if obj has keys
+function isEmpty(obj) {
+ 	return Object.keys(obj).length === 0;
+}
+
+
+// Pick keys from an object
+function selectKeys(obj, keys) {
+	let selected = {}
+	for (i in keys){
+		if (keys[i] in obj)
+			selected[keys[i]]= obj[keys[i]]
+	}
+	
+	return selected
+}
+
+
+// Costumize string sort by length then by dictionary order  
 function sortByLength (arr){
 	return	arr.sort(function(a, b) {
 	  	return a.length - b.length || // sort by length, if equal then
@@ -141,8 +156,8 @@ function sortByLength (arr){
 }
 
 
-// sort a 2-dim-array by the 2nd column
-function compare_by_column(a, b){
+// Sort a 2-dim-array by the 2nd column
+function compareByColumn(a, b){
 	if (a[3] === b[3]) {
 		return 0;
 	}
@@ -152,14 +167,16 @@ function compare_by_column(a, b){
 }
 
 
-/*convert hex to bytes*/ 
-function hex_to_bytes(hex) {
-	var bytes = []
-	for (i = 0; i < hex.length; i+=2) {
-		var ch = parseInt(hex.substr(i, 2), 16);
-		bytes.push(ch); 
-	}
-	res = new Uint8Array(bytes);
-	return res.buffer;
+// Convert byteArray to hex string
+function toHexString(byteArray) {
+  return Array.prototype.map.call(byteArray, function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('');
+}
+
+
+// Convert array of buffer to string
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, new Uint16Array(buf));
 }
 

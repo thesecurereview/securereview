@@ -1,3 +1,37 @@
+function decodeVarInt (reader) {
+	let bytes = []
+	let byte = 0
+	let multibyte = 0
+	do {
+		byte = reader.readUInt8()
+		// We keep bits 6543210
+		const lastSeven = byte & 0b01111111
+		bytes.push(lastSeven)
+		// Whether the next byte is part of the variable-length encoded number
+		// is encoded in bit 7
+		multibyte = byte & 0b10000000
+	} while (multibyte)
+	// Now that all the bytes are in big-endian order,
+	// alternate shifting the bits left by 7 and OR-ing the next byte.
+	// And... do a weird increment-by-one thing that I don't quite understand.
+	return bytes.reduce((a, b) => ((a + 1) << 7) | b, -1)
+}
+
+
+function otherVarIntDecode (reader, startWith) {
+	let result = startWith
+	let shift = 4
+	let byte = null
+	do {
+		byte = reader.readUInt8()
+		result |= (byte & 0b01111111) << shift
+		shift += 7
+	} while (byte & 0b10000000)
+
+  	return result
+}
+
+
 // src: https://github.com/tjfontaine/node-buffercursor
 // but with the goal of being much lighter weight.
 class BufferCursor {
@@ -89,7 +123,6 @@ class GitPackIndex {
 		let btype = byte & 0b1110000
 		let type = types[btype]
 		
-
 		// The length encoding get complicated.
 		// Last four bits of length is encoded in bits 3210
 		let lastFour = byte & 0b1111
@@ -99,25 +132,29 @@ class GitPackIndex {
 		// It is encoded in bit 7
 		let multibyte = byte & 0b10000000
 		if (multibyte) {
-			length = varIntDecode(reader, lastFour)
+			length = otherVarIntDecode(reader, lastFour)
 		}
 
-		let object = null;
-		/*/ Handle deltified objects
+		// Handle deltified objects
 		// ofs-delta and ref-delta store the "delta" to be applied to another object
 		// ref-delta directly encodes 20-byte base object name.
 		// If the base object is in the same pack, ofs-delta encodes the offset of the base object
+		let object = null;
 		let base = null;
-		if (type === 'ofs_delta') {
+
+		//FIXME: read ofs_delta and ref_delta correctly
+		if (type === 'ofs_delta'){
 			let offset = decodeVarInt(reader);
 			let baseOffset = start - offset
 			;({ object: base, type } = await this.readSlice({ start: baseOffset }));
 		}
+
 		if (type === 'ref_delta') {
 			let oid = reader.slice(20).toString('hex')
-			;({ object: base, type } = await this.read({ oid }));
-		}*/
-	
+			return { type, oid}
+			//;({ object: base, type } = await this.read({ oid }));
+		}
+
 		// Handle undeltified objects
 		let buffer = raw.slice(reader.tell())
 
@@ -129,8 +166,8 @@ class GitPackIndex {
 			throw new Error(`Packfile told us object would have length ${length} 
 					but it had length ${object.byteLength}`)
 		}
-	
-	    	return { type, format: 'content', object }
+
+	    	return { type, object }
 	}
 }
 
@@ -148,17 +185,14 @@ var readFromPack = async function (pack) {
 		7: 'ref-delta'
    	}
 
-   	let offsetToObject = {}
-
-	//let packfileSha = pack.slice(-20).toString('hex')
  	let packfileSha = toHexString(pack.slice(-20))
 
-	let hashes = []
+	/*let hashes = []
 	let crcs = {}
 	let offsets = new Map()
-	let objectTypes = new Map()
+	let objectTypes = new Map()*/
 	let totalObjectCount = null
-
+   	let offsetToObject = {}
 	let objectInfo = {}
 
     	await listPack([pack], ({ data, type, reference, offset, num }) => {
@@ -173,7 +207,7 @@ var readFromPack = async function (pack) {
 			  type,
 			  offset
 			}
-		}/* else if (type === 'ofs-delta') { //FIXME:
+		} else if (type === 'ofs-delta') { //FIXME:
 			offsetToObject[offset] = {
 			  type,
 			  offset
@@ -183,9 +217,10 @@ var readFromPack = async function (pack) {
 			  type,
 			  offset
 			}
-		}*/
+		}
     	})
 
+	console.log("Number of fetched objects:", Object.keys(offsetToObject).length)
 	// We need to know the lengths of the slices to compute the CRCs.
 	let offsetArray = Object.keys(offsetToObject).map(Number)
 
@@ -199,13 +234,12 @@ var readFromPack = async function (pack) {
 		o.end = end
 	}
 
-	console.log(offsetToObject)
 	// Read Git index
 	const p = new GitPackIndex({
 		pack: Promise.resolve(pack),
-		packfileSha,
+		packfileSha/*,
 		hashes,
-		objectTypes/*,
+		objectTypes,
 		crcs,
 		offsets,
 		getExternalRefDelta*/
@@ -222,20 +256,34 @@ var readFromPack = async function (pack) {
 			p.readDepth = 0
 			p.externalReadDepth = 0
 
-			let { type, object } = await p.readSlice(offset)
-
-			//compute Git object sha1
-			let oid = getObjectHash (objectWrap(type, object))
-			o.oid = oid
-			hashes.push(oid)
-			//offsets.set(oid, offset)
-			objectTypes.set(oid, type)
-			//crcs[oid] = o.crc
-
-			objectInfo[oid] = {
-				type: type,
-				content: objectReader (type, object)
+			let { type, object, oid } = await p.readSlice(offset)
+			//FIXME: read ofs_delta and ref_delta correctly
+			if (type === 'ofs_delta' || type === 'ref_delta'){
+				objectInfo[oid] = {
+					type: type,
+					content: ""
+				}
 			}
+			else{
+				try{
+					//compute Git object sha1
+					oid = getObjectHash (objectWrap(type, object))
+				}catch{
+					console.log(type, object)
+					continue
+				}
+				o.oid = oid
+				/*hashes.push(oid)
+				offsets.set(oid, offset)
+				objectTypes.set(oid, type)
+				crcs[oid] = o.crc*/
+
+				objectInfo[oid] = {
+					type: type,
+					content: objectReader (type, object)
+				}
+			}
+
 		} catch (err) {
 			console.log('ERROR', err)
 			continue
@@ -244,20 +292,4 @@ var readFromPack = async function (pack) {
 
    	return objectInfo
 }
-
-
-//Decode mulibyte
-function varIntDecode (reader, startWith) {
-	let result = startWith
-	let shift = 4
-	let byte = null
-	do {
-		byte = reader.readUInt8()
-		result |= (byte & 0b01111111) << shift
-		shift += 7
-	} while (byte & 0b10000000)
-
-  	return result
-}
-
 

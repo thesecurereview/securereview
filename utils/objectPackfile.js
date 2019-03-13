@@ -12,7 +12,7 @@ const types = {
 /**
 * Create a packfile to push Git objects
 */
-var packObjects = async function ({
+var pushPackLine = async function ({
 	objects,
 	outputStream
 }) {
@@ -85,12 +85,15 @@ var packObjects = async function ({
 /**
 * Create a packfile to fetch Git objects
 */
-function wantPackLine ({
-	caps,
-	wants,
-	haves,
-	shallows,
-	depth 
+function fetchPackLine ({
+	caps = [],
+	wants = [],
+	haves = [],
+	shallows = [],
+	//depth = null, //Limit fetching to the specified number of commits from the tip of each remote branch history	
+	deepen = null, 	//Limit fetching to the specified number of commits from the current shallow boundary
+	since = null,	//Shorten the history of a shallow repository to include all reachable commits after <date>
+	exclude = [] 	//Shorten the history of a repository to exclude commits reachable from a specified remote branch/tag. 
 }){
 	let packstream = getStream()
 
@@ -110,8 +113,23 @@ function wantPackLine ({
 			packLineEncode(packLine)
 		)
 	}
-	if (depth !== null) {
-		let packLine = `deepen ${depth}\n`
+
+	if (deepen !== null) {
+		let packLine = `deepen ${deepen}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+	if (since !== null) {
+		let packLine = `deepen-since ${Math.floor(since.valueOf() / 1000)}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+	for (const oid of exclude) {
+		let packLine = `deepen-not ${oid}\n`
 		packstream.write(
 			packLineEncode(packLine)
 		)
@@ -170,7 +188,7 @@ var pushObjects = function ({
 		packstream.write(packLineFlush())
 
 		// Write objects into the packfile
-		packObjects({
+		pushPackLine({
 			objects,
 			outputStream: packstream
 		})
@@ -191,7 +209,7 @@ var pushObjects = function ({
 /**
 * Fetch Git objects from the server
 */
-var fetchObjects = async function({ repo_url, heads, refs }, callback){
+var fetchObjects = async function({ repo_url, wants, haves, refs }, callback){
 	
 	// Set upload service 
 	var service = UPLOADPACK
@@ -201,9 +219,8 @@ var fetchObjects = async function({ repo_url, heads, refs }, callback){
 
 		let caps = formCaps(httpResponse.capabilities)
 		
-		//Check if heas are provided, otherwise take from refs
-		let wants = [];
-		if (!heads) {
+		// Check if wants are provided, otherwise take them from refs
+		if (!wants){
 			for (i in refs){
 				let head;
 				if (refs[i].startsWith('refs'))
@@ -214,20 +231,22 @@ var fetchObjects = async function({ repo_url, heads, refs }, callback){
 				wants.push(head)
 			}	
 		}
-		else
-			wants = [...heads]
 
-		let shallows = httpResponse.capabilities.includes('shallow') ? [...heads] : []
-		let haves = []
-		let depth = 1
+		// Check if haves are provided, otherwise assume an empty array
+		if (!haves){
+			haves = []
+		}
+
+		let shallows = httpResponse.capabilities.includes('shallow') ? [...wants] : []
+		let deepen = 1
 
 		// Create the packstream
-		var stream = wantPackLine ({
+		var stream = fetchPackLine ({
 			    caps,
 			    wants,
 			    haves,
 			    shallows,
-			    depth 
+			    deepen 
 		});
 
 		// Ask for the objects (wants)
@@ -237,9 +256,20 @@ var fetchObjects = async function({ repo_url, heads, refs }, callback){
 			auth,
 			stream, 
 			function (result) {
-				let packfile = parsePackfileResponse(result)
+				/*TODO: Parse the packfile header
+				let { packfile, shallows, nak} = 
+					parsePackfileResponse(result)
+
+				//Check if nak message is received
+				if (nak != true)
+					throw new Error ('The packfile is not retrieved correctly')
+				*/
+				result = new Uint8Array(result);
+				//data = data.slice(8, data.byteLength) // "008NAK\n"
+				let packfile = result.slice(12, result.byteLength) //"00000008NAK\n"
+
+
 				//TODO: check the packfile sha1
-				// sha1 is the last 20 chars 
 				let packfileSha = toHexString(packfile.slice(-20))
 
 				// Read the packfile

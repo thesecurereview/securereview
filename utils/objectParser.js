@@ -82,42 +82,9 @@ function objectReader(type, buffer){
 }
 
 
-// Parse an array of Git objects to extract trees
-function formTrees(objects, rootTreeHash, dirs){
-
-	// Get the tree corresponding to the root directory 
-	// and remove it from dirs
-	let trees = {
-		"":objects[rootTreeHash].content
-	}
-
-	// Changed dirs are sorted by length, in a dictionary order
-	// Thus, going through changed dirs, 
-	// we can make sure that parent directories are visited first
-	// To do so, we take a counter and traverse the dirs
-	let counter = 1
-	while (dirs.length > counter){
-		let dirPath = dirs[counter]
-		let parent = getParentPath (dirPath)
-		let dir = removeParentPath (dirPath)	
-		try{
-			let treeHash = trees[parent][dir].oid
-			trees [dirPath] = objects[treeHash].content
-		}
-		catch(err) {
-			console.log(err)
-		}
-		
-		counter++;
-	}
-
-	return trees
-}
-
-
 // Parse a commit object
 function parseCommitObject(object){
-
+	console.log(object)
 	var treeHash = object.slice(
 		object.indexOf('tree ') + 5, 
 		object.indexOf('\nparent')
@@ -130,7 +97,51 @@ function parseCommitObject(object){
 }
 
 
-// Parse an array of Git objects to extract blob and trees
+// Parse an array of Git objects to extract trees
+function formTrees(objects, treeHash, dirs){
+
+	let trees = {}
+	let unfetched = {}
+
+	// Changed dirs are sorted by length, in a dictionary order
+	// Thus, going through changed dirs, 
+	// we make sure that parent directories are visited first
+	// To do so, we take a counter and traverse the dirs
+	let counter = 0
+	while (dirs.length > counter){
+		dirPath = dirs[counter]
+
+		//update treeHash for non-root trees
+		if (counter > 0){
+			let parent = getParentPath (dirPath)
+			let dir = removeParentPath (dirPath)	
+			treeHash = trees[parent][dir].oid
+		}
+
+		// As soon as an unfetched tree is found, break the loop
+		// as it is not possible to extract the subtrees
+		try{
+			trees [dirPath] = objects[treeHash].content
+		}
+		catch(err) {
+			unfetched = {
+				start: treeHash,
+				dirs: dirs.slice(counter)
+			};
+			break
+		}
+		
+		counter++;
+	}
+ 
+	return { 
+		trees: trees, 
+		unfetched: unfetched
+		}
+}
+
+
+// Parse fetched Git objects to extract trees
 function getTrees(objects, parents, changed_dirs){
 
 	/*/ TODO: Check if the object type is commit, 
@@ -143,17 +154,44 @@ function getTrees(objects, parents, changed_dirs){
 			throw new Error('Head commit for the change branch is not fetched')
 	*/
 
+	//Get the tree hash in both branches
 	let baseCommit = objects[parents.baseHead].content;
 	let changeCommit = objects[parents.changeHead].content;
-
-	// Get trees/subtrees in the base/master branch
 	let baseTreeHash = parseCommitObject(baseCommit).tree
-	let baseTrees =  formTrees(objects, baseTreeHash, changed_dirs)
-
-	// Get trees/subtrees in the change branch
 	let changeTreeHash = parseCommitObject(changeCommit).tree
+	console.log(baseTreeHash, changeTreeHash)
+
+	// Get trees/subtrees in the base/master and changes branches
+	let baseTrees = formTrees(objects, baseTreeHash, changed_dirs)
 	let changeTrees =  formTrees(objects, changeTreeHash, changed_dirs)
 
-	return [baseTrees, changeTrees]
+	if (isEmpty(baseTrees.unfetched))
+		console.log(baseTrees.unfetched)
+
+	if (isEmpty(changeTrees.unfetched))
+		console.log(changeTrees.unfetched)
+
+	return [baseTrees.trees, changeTrees.trees]
+}
+
+
+// Parse fetched Git objects to extract blobs
+function getBlobs(objects, trees, paths){
+	
+	var blobs = {}
+	for (var i in paths){
+		fpath = paths[i];
+		parent = getParentPath(fpath);
+		fname = removeParentPath(fpath)
+		try{
+			blobs[fpath] = objects[trees[fpath].oid]
+		}
+		catch{
+			blobs[fpath] = null
+		}
+			
+	}
+	
+	return blobs
 }
 

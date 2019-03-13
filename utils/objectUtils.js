@@ -196,7 +196,6 @@ function getBlobInfo (item){
 }
 
 
-
 /**
 * Populate the popup window with parent info
 */
@@ -213,5 +212,6 @@ function setParentInfo(commit) {
 	/*fill the parent info form*/
 	document.getElementById('parent_info').value = parent_info;
 }
+
 
 
