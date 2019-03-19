@@ -126,6 +126,8 @@ function parsePackfileResponse(data){
 	let uint8View = new Uint8Array(data);
 	data = ab2str(uint8View)
 
+	console.log(data)
+
 	// Extract the first line
 	let idx = data.indexOf("\nPACK")
 	let packetLine = data.slice(0, idx)
@@ -142,6 +144,7 @@ function parsePackfileResponse(data){
 	packetLine = packetLine.slice(0, packetLine.indexOf(ending))
 
 	let shallows = []
+	let unshallows = []
 	if (packetLine.length > 1){
 		packetLine = packetLine.split("0034shallow")
 		//Ignore the first element
@@ -208,38 +211,47 @@ var parseSendPackResult = function (response){
 }
 
 
-//Form caps
-function formCaps (capabilities){
+// Filter capabilities 
+function filterCaps (capabilities){
 
-	/*
-	* Filter capabilities 
-	* If 'side-band' capability is  not specified, 
-	* the server will stream the entire packfile without multiplexing.
-	*/ 
+	// A complete list of caps is available at:
+	// https://git-scm.com/docs/protocol-capabilities/2.4.0
+	// https://github.com/git/git/blob/master/fetch-pack.c#L884
+	// https://github.com/git/git/blob/master/upload-pack.c#L891
+	// https://github.com/schacon/gitscm/blob/master/public/docs/gitserver.txt#L516
+
 	capabilities = computeIntersect(capabilities,
 		[
+		//no-done allows the sender to immediately send a pack following its first "ACK obj-id ready" message.
+		'no-done',
+
+		'shallow',
+
+		//multi_ack_detailed allows to better understand the server's in-memory state
+		//'multi_ack_detailed', 
+
 		// multi_ack allows the server to return "ACK obj-id continue" 
 		// as soon as it finds a commit that it can use as a common base
 		//'multi_ack',
 
-		//multi_ack_detailed is an extension of multi_ack 
-		//that permits client to better understand the server's in-memory state
-		'multi_ack_detailed', 
-
-		//no-done allows the sender to immediately send a pack following its first "ACK obj-id ready" message.
-		'no-done',
-
+		// If 'side-band' capability is  not specified, 
+		// the server will stream the entire packfile without multiplexing. 
+		//'side-band'
 		//'side-band-64k',
 
 		//A thin_pack is one with deltas which reference base objects not contained within the pack
-		'thin-pack',
+		//'thin-pack',
 
 		//client can understand PACKv2 with delta referring to its base by position in pack rather than by an obj-id.
 		//'ofs-delta', 
+
+		//'include-tag',
+
+		//'no-progress',
 
 		//`agent=${agent}`
 		]
 	)
 
-  	return ` ${capabilities.join(' ')}`
+  	return capabilities
 }

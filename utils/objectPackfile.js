@@ -16,7 +16,7 @@ var pushPackLine = async function ({
 	objects,
 	outputStream
 }) {
-	let pad = getPad()
+	let pad = getPad();
 	let hash = getSha1();
 
 	// write chunk of data
@@ -135,6 +135,8 @@ function fetchPackLine ({
 		)
 	}
 
+	packstream.write(packLineFlush())
+
 	//FIXME check if works well
 	for (const oid of haves) {
 		let packLine = `have ${oid}\n`
@@ -143,7 +145,6 @@ function fetchPackLine ({
 		)
 	}
 
-	packstream.write(packLineFlush())
  	packstream.end(packLineEncode(`done\n`))
 
 	return packstream	
@@ -209,7 +210,7 @@ var pushObjects = function ({
 /**
 * Fetch Git objects from the server
 */
-var fetchObjects = async function({ repo_url, wants, haves, refs }, callback){
+var fetchObjects = async function({ repo_url, wants, haves, since, exclude, refs }, callback){
 	
 	// Set upload service 
 	var service = UPLOADPACK
@@ -217,9 +218,9 @@ var fetchObjects = async function({ repo_url, wants, haves, refs }, callback){
 	// Run git-upload-pack process
 	get_req(repo_url, service, auth, function (httpResponse){
 
-		let caps = formCaps(httpResponse.capabilities)
+		let capabilities = filterCaps(httpResponse.capabilities)
 		
-		// Check if wants are provided, otherwise take them from refs
+		// WANTS: Check if wants are provided, otherwise take them from refs
 		if (!wants){
 			for (i in refs){
 				let head;
@@ -232,21 +233,35 @@ var fetchObjects = async function({ repo_url, wants, haves, refs }, callback){
 			}	
 		}
 
-		// Check if haves are provided, otherwise assume an empty array
+		// HAVES: Check if haves are provided
 		if (!haves){
 			haves = []
 		}
 
-		let shallows = httpResponse.capabilities.includes('shallow') ? [...wants] : []
-		let deepen = 1
+		// SHALLOWS: Check if shallow is supported
+		let shallows = capabilities.includes('shallow') ? [...wants] : []
+
+		// DEEPEN SINCE
+		since = capabilities.includes('deepen-since') ? [...since] : null		
+
+		// DEEPEN NOT
+		exclude = capabilities.includes('deepen-not') ? [...exclude] : []		
+
+		// DEEPEN //TODO: Support for any deepn number
+		let deepen = 1 
+
+		// CAPS
+		capabilities = ` ${capabilities.join(' ')}`
 
 		// Create the packstream
 		var stream = fetchPackLine ({
-			    caps,
-			    wants,
-			    haves,
-			    shallows,
-			    deepen 
+			capabilities,
+			wants,
+			haves,
+			shallows,
+			since, //since = new Date("Wed Mar 13 2019 12:06:21 GMT-0400")
+			exclude,
+			deepen 
 		});
 
 		// Ask for the objects (wants)
@@ -256,7 +271,9 @@ var fetchObjects = async function({ repo_url, wants, haves, refs }, callback){
 			auth,
 			stream, 
 			function (result) {
-				/*TODO: Parse the packfile header
+				//console.log(result)
+
+				/*/TODO: Parse the packfile header
 				let { packfile, shallows, nak} = 
 					parsePackfileResponse(result)
 
@@ -264,10 +281,10 @@ var fetchObjects = async function({ repo_url, wants, haves, refs }, callback){
 				if (nak != true)
 					throw new Error ('The packfile is not retrieved correctly')
 				*/
+
 				result = new Uint8Array(result);
 				//data = data.slice(8, data.byteLength) // "008NAK\n"
 				let packfile = result.slice(12, result.byteLength) //"00000008NAK\n"
-
 
 				//TODO: check the packfile sha1
 				let packfileSha = toHexString(packfile.slice(-20))

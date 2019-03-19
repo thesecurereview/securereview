@@ -20,6 +20,7 @@ function run(){
 		var branch = result.branch
 		var change_id = result.change_id
 		//var changeNumber = result._number
+		//getBranchTree(project, branch)
 
 		//TODO: sync the following API calls
 		// Get info: change branch
@@ -49,8 +50,8 @@ function run(){
 							var commitMessage = `Merge a change\n\n ${change_id}`
 							//remove ca from parents
 							parents = [parents.baseHead, parents.changeHead]
-							pushCommit({ project, branch, //changeNumber
-								objects, parents, treeHash, commitMessage })
+							/*pushCommit({ project, branch, //changeNumber
+								objects, parents, treeHash, commitMessage })*/
 						}
 					);
 				});

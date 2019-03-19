@@ -195,3 +195,17 @@ function getBranchInfo(project, branch, callback){
 	});
 }
 
+
+function getBranchTree(project, branch){
+
+	var treeHash = "2508b6d186afb1829dd8510233a9c2b86ee8dd61"
+
+	var endpoint = "projects/" + project + "/branches/master/trees/"
+	endpoint = `${HOST_ADDR}/${endpoint}` //+ treeHash + "/content/"
+
+	// Fire get request to get change info
+	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		console.log(result)
+	})
+
+}

@@ -72,7 +72,6 @@ function objectReader(type, buffer){
 	// TODO: verify buffer length
 	let actualLength = buffer.length - (i + 1)*/
 	
-	let unwrap
 	if (type == "tree")
 		return parseTreeObject (buffer)
 	else
@@ -84,7 +83,7 @@ function objectReader(type, buffer){
 
 // Parse a commit object
 function parseCommitObject(object){
-	console.log(object)
+	//console.log(object)
 	var treeHash = object.slice(
 		object.indexOf('tree ') + 5, 
 		object.indexOf('\nparent')
@@ -114,13 +113,14 @@ function formTrees(objects, treeHash, dirs){
 		//update treeHash for non-root trees
 		if (counter > 0){
 			let parent = getParentPath (dirPath)
-			let dir = removeParentPath (dirPath)	
-			treeHash = trees[parent][dir].oid
+			let dir = removeParentPath (dirPath)
+			treeHash = trees[parent][dir].oid	
 		}
 
 		// As soon as an unfetched tree is found, break the loop
 		// as it is not possible to extract the subtrees
 		try{
+			console.log(objects[treeHash])
 			trees [dirPath] = objects[treeHash].content
 		}
 		catch(err) {
@@ -132,12 +132,14 @@ function formTrees(objects, treeHash, dirs){
 		}
 		
 		counter++;
+
+		console.log(trees, unfetched)
 	}
  
 	return { 
 		trees: trees, 
 		unfetched: unfetched
-		}
+	}
 }
 
 

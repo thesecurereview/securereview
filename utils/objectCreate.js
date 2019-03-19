@@ -84,10 +84,12 @@ function getObjectHash(object_wrap){
 */
 function formCommit(treeHash, author, parents, message){
 
-	let authorDateTime = new Date()
+	/*let authorDateTime = new Date()
 	let timestamp = Math.floor(authorDateTime.valueOf() / 1000)
 	//get zone offset in minutes 
-	let timezoneOffset = authorDateTime.getTimezoneOffset()
+	let timezoneOffset = authorDateTime.getTimezoneOffset()*/
+
+	let [timestamp, timezoneOffset] = determineTime()
 
 	// initial commit
 	if (!parents){ 
