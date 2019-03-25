@@ -274,7 +274,7 @@ var fetchObjects = async function({ repo_url, wants, haves, since, exclude, refs
 				//console.log(result)
 
 				/*/TODO: Parse the packfile header
-				let { packfile, shallows, nak} = 
+				let { packfile, shallows, nak } = 
 					parsePackfileResponse(result)
 
 				//Check if nak message is received

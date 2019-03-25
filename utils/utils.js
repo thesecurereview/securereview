@@ -7,11 +7,12 @@ var UPLOADPACK = 'git-upload-pack'
 var authUsername= 'admin'
 
 var authEmail = 'hammad.afzali@gmail.com'
-//var authPassword = "E2ugM4/7dXMEKev8ArN6i2VNmT/xVPgJwThW4ZGKoQ" //PC
+var authPassword = "rl6PKFtOgQUfN57bMeq8fPt2b56fNTGUJIx/YApuFQ" //PC
 //var authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw" //Laptop
-var authPassword = "secret"
+//var authPassword = "mAwEx0wcFOYz4yIzA9agMC8mRmIVWvV+HTAyvA66pQ" //"secret"
 
 var HOST_ADDR = "http://localhost:8080"
+//var HOST_ADDR = "http://ec2-3-209-56-164.compute-1.amazonaws.com/gerrit/"
 var PUT_URL = "http://hmd@localhost:8080/a"
 
 var auth = {
@@ -25,6 +26,19 @@ var author = {
 }
 
 
+// Sort an array using the path key
+function comparePath (a, b) {
+  // https://stackoverflow.com/a/40355107/2168416
+  return compareStrings(a.path, b.path)
+}
+
+
+function compareStrings (a, b) {
+  // https://stackoverflow.com/a/40355107/2168416
+  return -(a < b) || +(a > b)
+}
+
+
 // Extract the parent path
 function getParentPath(path){
 	// Remove everything after the last "/"
@@ -32,13 +46,13 @@ function getParentPath(path){
 		path.lastIndexOf('/'));
 }
 
+
 // Remove the parent path
 function removeParentPath(path){
 	// Split by / and take the last one
 	path = path.split("/");
 	return path.pop();
 }
-
 
 
 // Get a list of intermediate paths in a filepath
@@ -79,7 +93,13 @@ function getCommonDirs (paths){
 
 	// Remove duplicates
 	// Sort by length (useful for the later comparison)
-	return uniqArray(sortByLength(dirs));
+	return arrayUniq(sortByLength(dirs));
+}
+
+
+// Replace all finds with the update
+function replaceAll (str, find, update){
+	return str.replace(new RegExp(find, 'g'), update)
 }
 
 
@@ -88,15 +108,10 @@ function filePathTrim (fpath){
 	return replaceAll(fpath, '/', '%2F')
 }
 
+
 // Replace all "/" occurrences with "%2F"
 function filePathUnTrim (fpath){
 	return replaceAll(fpath, '%2F', '/')
-}
-
-
-// Replace all finds with the update
-function replaceAll (str, find, update){
-	return str.replace(new RegExp(find, 'g'), update)
 }
 
 
@@ -108,13 +123,13 @@ function extractBetween (str, prefix, suffix) {
 
 
 // Compute the intersect between two arrays
-function computeIntersect (a, b) {
+function arrayIntersect (a, b) {
 	return a.filter(value => -1 !== b.indexOf(value));
 }
 
 
 // Remove duplicate elements from an array
-function uniqArray(array) {
+function arrayUniq(array) {
 	return array.filter(function(element, index, self) {
     		return index == self.indexOf(element);
 	});
@@ -178,5 +193,44 @@ function toHexString(byteArray) {
 // Convert array of buffer to string
 function ab2str(buf) {
   return String.fromCharCode.apply(null, new Uint16Array(buf));
+}
+
+
+// Parse the change URL
+function getChangeNumber(changeUrl){
+
+	//check if url ends with "/", remove it
+	if (changeUrl.endsWith('/')) changeUrl = changeUrl.slice(0,-1)
+	
+	/*
+	* TODO: Find a reliable approach
+	* From  <class="style-scope gr-change-view">
+	*/
+	return changeUrl.split("+/")[1].split("/")[0]
+}
+
+
+/* create a buffer*/
+var string_ArrayBuffer = function(str) {
+	return {
+		ptr: Uint16Array.from(str, function(x, i) {
+			return str.charCodeAt(i)}
+		),
+
+		size: Uint16Array.from(str, function(x, i) {
+			return str.charCodeAt(i)}).length
+	}
+}
+
+
+// Extract the fpath and ref name of fetched blob
+function getBlobInfo (item){
+	var ref = extractBetween(item, "commits/", "/files")
+	var fpath = extractBetween(item, "files/", "/content")
+
+	return {
+		fpath: filePathUnTrim(fpath), 
+		ref
+	}
 }
 

@@ -1,5 +1,5 @@
-// Form fileurls for a remote ref
-function fileUrls(project, head, files){
+// Form fileEndpoints for a remote ref
+function fileEndpoints(project, head, files){
 
 	var endpoint = "projects/" + project + "/commits/"
 	//+ commitID + "/files/" + fname + "/content"
@@ -24,30 +24,42 @@ function fileUrls(project, head, files){
 function formFileUrls (project, parents, 
 		added_files, modified_files){
 	
-	//TODO: use getBlobs in ./objectParser to check if the blob is already fetched
-	
-	// Get files: only modified for base branch, added and modified for change branch
-	let uris = fileUrls (project, parents.baseHead,
+	//TODO: Integrate with getBlobs (./objectParser), check if blob is already fetched
+
+	// Fetch modified and added blobs
+	//	- Modified: Take it for target, change and ca
+	//	- Added: Take it only for change branch
+
+	// If targetHead and caHead are not the same, fetch files for caHead
+	let caRefs = []
+	if  (parents.hasOwnProperty("caHead"))
+		caRefs = fileEndpoints (project, parents.caHead,
 			modified_files)
-	let urls = fileUrls (project, parents.changeHead, 
+	let targetRefs = fileEndpoints (project, parents.targetHead,
+			modified_files)
+	let changeRefs = fileEndpoints (project, parents.changeHead, 
 			[...added_files, ...modified_files])
 
-	return [...uris, ...urls]
+	return [...targetRefs, ...changeRefs, ...caRefs]
 }
 
 
 // Fetch multiple blobs at once
 var fetchBlobs = async function ({ urls } , callback){
 
-	// Get all blobs at once
 	var blobContents = {};
+
+	//TODO: Check the length before calling the function
+	if (urls.length < 1)
+		callback ({ blobContents });
+
 	mutliCallback = function(data) {
 		for(var item in data){
-			//var info = JSON.parse(data[item]);
+
 			var info = data[item];
 
-			// Assign content to the proper fpath and head
-			var [fpath, head] = getBlobInfo (item);
+			// Assign content to the proper fpath and ref
+			let {fpath, ref} = getBlobInfo (item);
 
 			// Initialize the sub-object, otherwise will get 'undefined' errors
 			if(fpath in blobContents == false){
@@ -55,11 +67,10 @@ var fetchBlobs = async function ({ urls } , callback){
 			}
 
 			// Store content of file per ref (content is base64 decoded)
-			blobContents [fpath][head] = atob(info);
+			blobContents [fpath][ref] = atob(info);
 
 		}
 
-		// All blobs are fetched, callback
 		callback ({ blobContents });
 	};
 

@@ -114,12 +114,12 @@ function updateBlobEntry ({ fpath, operation, oid,
 
 
 // Add a new subdir to the tree
-function add_new_subdir(entry){
+function addSubdir(entry){
 
 	// compute the tree hash
 	var object = createGitObject ('tree', [entry]);
 
-	var entry = ['40000', 'tree', object.oid, entry.path];
+	var entry = ['40000', 'tree', object.id, entry.path];
 
 	return { entry, object };	
 }
@@ -184,15 +184,6 @@ function extractParents (commitInfo){
 	}
 
 	return parents
-}
-
-
-// Extract the fpath and ref name of fetched blob
-function getBlobInfo (item){
-	var head = extractBetween(item, "commits/", "/files")
-	var fpath = extractBetween(item, "files/", "/content")
-
-	return [filePathUnTrim(fpath), head];
 }
 
 

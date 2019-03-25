@@ -52,13 +52,12 @@ function differentiate_blobs (files){
 
 // Merge all modified blobs
 function merge_blobs(blobContents, parents){
-
 	var new_content, blobs, parent_dir, bottom_tree;
 
-	let pr_head = parents.changeHead;
-	let base_head = parents.baseHead;
-	let ca_head = parents.hasOwnProperty("caHead") ? 
-			parents.caHead : base_head;
+	let changeHead = parents.changeHead;
+	let targetHead = parents.targetHead;
+	let caHead = parents.hasOwnProperty("caHead") ? 
+			parents.caHead : targetHead;
 
 	let newBlobs = {}
 	for (fpath in blobContents){
@@ -67,8 +66,8 @@ function merge_blobs(blobContents, parents){
 		var blobs = blobContents[fpath];
 
 		// Merge blobs
-		var new_content = merge_two_blobs (blobs[ca_head],
-			 blobs[base_head], blobs[pr_head]);
+		var new_content = merge_two_blobs (blobs[caHead],
+			 blobs[targetHead], blobs[changeHead]);
 
 		// Create a new blob object
 		newBlobs[fpath] = createGitObject("blob", new_content);
@@ -106,20 +105,6 @@ function merge_two_blobs (base, f1, f2){
 	var xdlmerge = xdl_merge(ancestor, file1, file2, xmp, result);
 
 	return xdlmerge;
-}
-
-
-/*Blob contents are in the string format
-* create a buffer*/
-var string_ArrayBuffer = function(str) {
-	return {
-		ptr: Uint16Array.from(str, function(x, i) {
-			return str.charCodeAt(i)}
-		),
-
-		size: Uint16Array.from(str, function(x, i) {
-			return str.charCodeAt(i)}).length
-	}
 }
 
 

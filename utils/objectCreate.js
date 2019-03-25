@@ -1,6 +1,5 @@
 /**
-* Get new commit/blob objects
-* content = commit, blob, tree_entries
+* Get new commit/blob/tree objects
 */
 function createGitObject(type, content){
 
@@ -13,36 +12,6 @@ function createGitObject(type, content){
 	- 120000: A symbolic link
 	*/
 
-	/*normalize the blob content*/
-	if (type == "blob")
-		content = normalize(content)
-
-	//toObject
-	let object;
-	if (type == "tree") //content = tree_entries
-		object = treeObject (content)
-	else
-		object = createBuffer (content, 'utf8')
-
-	//wrap object into buffer
-	let wrap = objectWrap (type, object)
-
-	//compress&write file
-	let compress = compressObject (wrap)
-
-	//object hash
-	let hash = getObjectHash (wrap)
-
-	return {
-		object: object,
-		id: hash
-	}	
-}
-
-
-/* create a new tree object*/
-function createTreeObejct(tree_entries){
-
 	/*
 	* tree [content size]\0[Object Entries]
 	* obj=[mode, type, hash, name]
@@ -50,19 +19,28 @@ function createTreeObejct(tree_entries){
 	* mode: 40000    
 	*/
 
-	/*/TODO: Make sure entries are sorted
-	// Convert dict to array, sort it then recreate dict
-	tree_entries = unwrap_tree_entries(tree_entries)	
-	tree_entries = tree_entries.sort(compareByColumn);
-	tree_entries = wrap_tree_entries(tree_entries)	
-	*/	
+	/*normalize the blob content*/
+	if (type == "blob")
+		content = normalize(content)
 
-	var type = "tree";
-	var obj = createGitObject(type, tree_entries);
-	
-	objects.push([type, obj.object]);
+	//toObject
+	let object;
+	if (type == "tree"){
+		object = treeObject (content)
+	}else{
+		object = createBuffer (content, 'utf8')
+	}
 
-	return obj.id;
+	//wrap object into buffer
+	let wrap = objectWrap (type, object)
+
+	//compress&write file
+	let compress = compressObject (wrap)
+
+	return {
+		id: getObjectHash (wrap), //object hash
+		object: object
+	}	
 }
 
 

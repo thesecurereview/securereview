@@ -83,7 +83,7 @@ function objectReader(type, buffer){
 
 // Parse a commit object
 function parseCommitObject(object){
-	//console.log(object)
+
 	var treeHash = object.slice(
 		object.indexOf('tree ') + 5, 
 		object.indexOf('\nparent')
@@ -120,20 +120,17 @@ function formTrees(objects, treeHash, dirs){
 		// As soon as an unfetched tree is found, break the loop
 		// as it is not possible to extract the subtrees
 		try{
-			console.log(objects[treeHash])
 			trees [dirPath] = objects[treeHash].content
 		}
 		catch(err) {
 			unfetched = {
-				start: treeHash,
+				oid: treeHash,
 				dirs: dirs.slice(counter)
 			};
 			break
 		}
 		
 		counter++;
-
-		console.log(trees, unfetched)
 	}
  
 	return { 
@@ -148,32 +145,29 @@ function getTrees(objects, parents, changed_dirs){
 
 	/*/ TODO: Check if the object type is commit, 
 	// otherwise raise an error 
-	let baseCommit = objects[parents.baseHead].type === "commit" ? 
-			objects[parents.baseHead].content : 
-			throw new Error('Head commit for the base branch is not fetched')
+	let targetCommit = objects[parents.targetHead].type === "commit" ? 
+			objects[parents.targetHead].content : 
+			throw new Error('Head commit for the target branch is not fetched')
 	let changeCommit = objects[parents.changeHead].type === "commit" ?
 			objects[parents.changeHead].content : 
 			throw new Error('Head commit for the change branch is not fetched')
 	*/
 
 	//Get the tree hash in both branches
-	let baseCommit = objects[parents.baseHead].content;
+	let targetCommit = objects[parents.targetHead].content;
 	let changeCommit = objects[parents.changeHead].content;
-	let baseTreeHash = parseCommitObject(baseCommit).tree
+	let targetTreeHash = parseCommitObject(targetCommit).tree
 	let changeTreeHash = parseCommitObject(changeCommit).tree
-	console.log(baseTreeHash, changeTreeHash)
 
-	// Get trees/subtrees in the base/master and changes branches
-	let baseTrees = formTrees(objects, baseTreeHash, changed_dirs)
-	let changeTrees =  formTrees(objects, changeTreeHash, changed_dirs)
+	// Get trees/subtrees in the target/master and changes branches
+	let targetTrees = formTrees(objects, targetTreeHash, changed_dirs)
+	let changeTrees = formTrees(objects, changeTreeHash, changed_dirs)
 
-	if (isEmpty(baseTrees.unfetched))
-		console.log(baseTrees.unfetched)
+	//
+	let unfetched_trees = Object.assign({}, 
+		targetTrees.unfetched, changeTrees.unfetched);
 
-	if (isEmpty(changeTrees.unfetched))
-		console.log(changeTrees.unfetched)
-
-	return [baseTrees.trees, changeTrees.trees]
+	return [targetTrees.trees, changeTrees.trees, unfetched_trees]
 }
 
 

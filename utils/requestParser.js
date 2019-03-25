@@ -75,7 +75,7 @@ function parseGETResponse(data, service){
 		refs:refs, 
 		symrefs:symrefs,
 		capabilities:capabilities
-		}
+	}
 }
 
 
@@ -125,8 +125,6 @@ function parsePackfileResponse(data){
 	// Access Uint8Array in ArrayBuffer and convert it to string
 	let uint8View = new Uint8Array(data);
 	data = ab2str(uint8View)
-
-	console.log(data)
 
 	// Extract the first line
 	let idx = data.indexOf("\nPACK")
@@ -220,7 +218,7 @@ function filterCaps (capabilities){
 	// https://github.com/git/git/blob/master/upload-pack.c#L891
 	// https://github.com/schacon/gitscm/blob/master/public/docs/gitserver.txt#L516
 
-	capabilities = computeIntersect(capabilities,
+	capabilities = arrayIntersect(capabilities,
 		[
 		//no-done allows the sender to immediately send a pack following its first "ACK obj-id ready" message.
 		'no-done',

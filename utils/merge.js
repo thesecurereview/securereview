@@ -1,54 +1,55 @@
-var master_trees, pr_trees
-var objects = []
+let master_trees, pr_trees;
+let objects = [];
 
 /**
 * Propagate the update to the root tree
 */
 function propagateUpdate({ changed_dirs }){
 
-	var new_tree_hash, currentPath, currentTree, currentDir;
-
-	// reverse change dirs to start from bottom
+	// Reverse change dirs to start from bottom
 	changed_dirs = changed_dirs.reverse()
 
-	// loop over changed dirs, start with the bottom tree
+	var new_tree_hash, currentPath, currentTree, currentDir;
+
+	// Loop over changed dirs, start with the bottom tree
 	while  (changed_dirs.length > 0){
 
-		// bottom level is always at index 0
+		// Get bottom path, dir, tree
 		currentPath = changed_dirs[0];
-		currentTree = dictValues(master_trees[currentPath])
 		currentDir = removeParentPath(currentPath)
+		currentTree = dictValues(master_trees[currentPath])
 
-		// compute the new tree hash		
-		// TODO: Make sure entrty path is not a full path
-		// createTreeObejct(tree_entries)
+		// Sort the tree using entry paths
+		currentTree.sort(comparePath)
+
+		// Compute the new tree hash		
 		var type = "tree";
 		var obj = createGitObject(type, currentTree);
 		objects.push([type, obj.object]);
 		new_tree_hash = obj.id	
 
-		// update the parent with the new hash of current tree (except the root level)
+		// Update the parent tree with the new hash of current tree
 		if (currentPath != ""){
 
 			var parent_dir = changed_dirs[1];			
-			var parent_tree;
 
-			// Check for new subdir
 			// FIXME check if it always works
 			// TODO: Add entry from PR instead of creating one in master
+
+			// Check for new subdir
 			let entry, object;
 			while (master_trees[parent_dir] === undefined){
-				let { entry, object } = add_new_subdir (currentTree);
+				let { entry, object } = addSubdir (currentTree);
 				objects.push([type, obj.object]);
 				parent_dir = entry.path
-				parent_tree = entry
+				currentTree = entry
 			}
 
 			// Update master branch			
 			master_trees[parent_dir][currentDir].oid = new_tree_hash
 		}
 
-		//remove the current dir and go for the upper level
+		// Remove the current dir and go for the upper level
 		changed_dirs.shift();
 	}
 
@@ -59,32 +60,32 @@ function propagateUpdate({ changed_dirs }){
 /**
 * Update the bottom trees based on the change
 */
-function mergeBottomTrees (project, changed_dirs, parents, blobContents, 
+function mergeBottomTrees (parents, blobContents, 
 		added_files, deleted_files, modified_files, callback){
 
-	var fpath, fname, parent, bottom_tree;
+	var fpath, fname, parent;
 
 	//TODO: update this code using updateBlobEntry in ./objectUtils
-	//delete blobs
+	// Delete blobs
 	if (deleted_files.length > 0){
 		for (var i in deleted_files) {
 			// Find the parent tree in master
 			fpath = deleted_files[i];
 			parent = getParentPath(fpath);
-			fname = removeParentPath(fpath)
+			fname = removeParentPath(fpath);
 
 			// Update master branch
 			delete master_trees[parent][fname];
 		}
 	}
 
-	//add new blobs
+	// Add new blobs
 	if (added_files.length > 0){
 		for (var i in added_files) {
 			// Find the parent tree in PR
 			fpath = added_files[i];
 			parent = getParentPath(fpath);
-			fname = removeParentPath(fpath)
+			fname = removeParentPath(fpath);
 
 			// Update master branch
 			master_trees[parent][fname] = pr_trees[parent][fname]; 
@@ -98,10 +99,9 @@ function mergeBottomTrees (project, changed_dirs, parents, blobContents,
 		 
 	}
 
-	//merge blobs
+	// Merge blobs
 	if (modified_files.length > 0){
-
-		//Pick modified blobs
+		// Pick modified blobs
 		blobContents = selectKeys(blobContents, modified_files)
 		let newBlobs = merge_blobs(blobContents, parents)
 
@@ -109,7 +109,7 @@ function mergeBottomTrees (project, changed_dirs, parents, blobContents,
 			// Find the parent tree in master
 			fpath = modified_files[i];
 			parent = getParentPath(fpath);
-			fname = removeParentPath(fpath)
+			fname = removeParentPath(fpath);
 
 			// Update master branch
 			master_trees[parent][fname].oid = newBlobs[fpath].id 
@@ -117,8 +117,7 @@ function mergeBottomTrees (project, changed_dirs, parents, blobContents,
 			// Create new blob objects to push to the server
 			objects.push(["blob", newBlobs[fpath].object])
 		}
-	} 
-	
+	}	
 }
 
 
@@ -131,13 +130,12 @@ var runMergeProcess = async function (change_id, project, parents, callback){
 
 	// Make an array of commits we want to fetch
 	var wants = dictValues(parents)
-	//wants = [parents.changeHead]
 
+	var t0 = performance.now();
 	// Fetch objects
 	fetchObjects({ repo_url, wants }, ({ data }) => {
-		console.log(data)
 
-		/* How to do the merge:
+		/* Merge algorithm:
 		* - Differentiate blobs
 		* - Get trees for both branches
 		* - Create the new merge commit
@@ -149,23 +147,26 @@ var runMergeProcess = async function (change_id, project, parents, callback){
 		// Get the status of changed files in the change branch
 		getRevisionFiles(change_id, changeHead, function(result){
 
-			//differentiate files between change and base branches
+			// Differentiate files between change and base branches
 			var [added_files, deleted_files, modified_files] = 
 				differentiate_blobs(result);
 
 			// Find involved trees/subtrees in the merge
 			var paths = added_files.concat(
 				deleted_files, modified_files);
-
-			// Creat a uniq list of involved trees
 			var changed_dirs = getCommonDirs (paths);
 
 			// Go through already retrieved objects
-			// TODO: Make sure all needed treea are fetched 
-			[master_trees, pr_trees] = 
+			// TODO: Make sure all needed trees are fetched 
+			let unfetched_trees;
+			[ master_trees, pr_trees, unfetched_trees ] = 
 				getTrees(data, parents, changed_dirs)
 
-			// TODO: Copy the commit object packfile and extract commit easily
+			//TODO check unfetched
+			if (!isEmpty(unfetched_trees))
+				console.log("Missing objects", unfetched_trees)
+
+			// TODO: Copy the commit object from the packfile
 			let changeCommit = data[changeHead].content
 			var type = "commit";
 			var obj = createGitObject(type, changeCommit);
@@ -175,22 +176,22 @@ var runMergeProcess = async function (change_id, project, parents, callback){
 			// Get urls for needed blobs (added, modified)
 			let urls = formFileUrls (project, parents, 
 				added_files, modified_files)
-
+		
+			var t1 = performance.now();
+			console.log("Taken time for tree reconstruction: ", t1 - t0)
 			// Fetch all needed blobs
 			fetchBlobs({ urls }, ({ blobContents }) => {
 
-				//Merge botton trees
-				mergeBottomTrees (project, changed_dirs, parents, blobContents,
+				// Merge botton trees
+				mergeBottomTrees (parents, blobContents,
 					added_files, deleted_files, modified_files);
 
 				// Propagate updates to get new root tree hash
 				let treeHash = propagateUpdate({ changed_dirs });
 				callback(treeHash, objects);
-
 			});
 
 		});
 	});
 
 }
-

@@ -157,7 +157,7 @@ class GitPackIndex {
 			return this.readSlice({ start })
 		else{
 			//TODO capture missing objects
-			console.log("Missing base object:", oid)
+			console.log("Missing object:", oid)
 		}	
 	}
 
@@ -228,6 +228,7 @@ class GitPackIndex {
 					but it had length ${object.byteLength}`)
 		}
 
+		// Apply delta for base objects
 		if (base) {
 			let applyDelta = getGitApplyDelta();
 			object = createBuffer(applyDelta(object, base))
@@ -291,8 +292,6 @@ var readFromPack = async function (pack) {
 		}
     	})
 
-	console.log("Number of fetched objects:", Object.keys(offsetToObject).length)
-	console.log(offsetToObject)
 	// We need to know the lengths of the slices to compute the CRCs.
 	let offsetArray = Object.keys(offsetToObject).map(Number)
 

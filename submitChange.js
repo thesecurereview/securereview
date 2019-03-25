@@ -1,26 +1,22 @@
-/*
-- Compare base and change branches
-- Find the merge base commit (Common Ancestor)
-- 
-*/
-var url;
-
+//var url;
+var t0;
 /**
-* Run the submitting merge by 
-* comparing the base and change branches
+* Submit merge request:
+*  - compare target and change branches
+*  - update the bottom tree in the target branch
+*  - propagate the update to the root tree
+*  - computet the root tree hash and then new commit
 */
-function run(){
+function run(url){
 
 	// Get change number
 	var cn = getChangeNumber (url)
-
 	// Get a summary of change
 	getChangeSummary(cn, function(result){
 		var project = result.project
 		var branch = result.branch
 		var change_id = result.change_id
 		//var changeNumber = result._number
-		//getBranchTree(project, branch)
 
 		//TODO: sync the following API calls
 		// Get info: change branch
@@ -29,29 +25,35 @@ function run(){
 			// Get info: common ancestor (parent of the 1st commit in change branch)
 			getRevisionCommit(change_id, "1", function(caInfo){
 
-				// Get info about the base branch
-				getBranchInfo(project, branch, function(baseInfo){
+				// Get info about the target branch
+				getBranchInfo(project, branch, function(targetInfo){
 					// Populate the parent window
-					setParentInfo (baseInfo);
+					setParentInfo (targetInfo);
 
-					// Form heads, Ignore caHead if it's the same as baseHead
+					// Form heads, Ignore caHead if it's the same as targetHead
 					var parents = {
 						changeHead: changeInfo.current_revision,
-						baseHead: baseInfo.commit
+						targetHead: targetInfo.commit
 					};
 					var caHead = caInfo.parents[0].commit
-					if (parents.baseHead !== caHead)
+					if (parents.targetHead !== caHead)
 						parents["caHead"] = caHead					
 					
 					// Run the merge process
 					runMergeProcess(change_id, project, parents,
 						function(treeHash, objects){
-							//FIXME: Extract commitMessage
-							var commitMessage = `Merge a change\n\n ${change_id}`
+
+							//TODO: Form a better commit message 
+							var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
 							//remove ca from parents
-							parents = [parents.baseHead, parents.changeHead]
-							/*pushCommit({ project, branch, //changeNumber
-								objects, parents, treeHash, commitMessage })*/
+							parents = [parents.targetHead, parents.changeHead]
+							pushCommit({ url, project, branch, //changeNumber
+								objects, parents, treeHash, commitMessage }, 
+								({ result }) => {
+								var t1 = performance.now();
+								console.log("Taken time: ", t1 - t0)
+								console.log(result)
+							});
 						}
 					);
 				});
@@ -65,14 +67,13 @@ function run(){
 }
 
 
-
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function () {
-
 	chrome.tabs.query({active: true, currentWindow: true}, 
 	function(tabs) {
+		t0 = performance.now();
 		url = tabs[0].url;
-		run();
+		run(url);
 	});
 
 	/*Push the signed merge commit to the server*/
@@ -80,10 +81,4 @@ document.addEventListener('DOMContentLoaded', function () {
 	'click', pushCommit);
 
 });
-
-
-
-
-	
-
 

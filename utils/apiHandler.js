@@ -1,4 +1,4 @@
-//Make a single api call
+// Make a single api call
 singleAPICall = function (endpoint, callback){
 
 	var xhr = new XMLHttpRequest();
@@ -7,8 +7,6 @@ singleAPICall = function (endpoint, callback){
  	};
 
 	xhr.open('get', endpoint, true);
-
-	//Set Authorization
     	//xhr.setRequestHeader('Authorization', 'token ' + TOKEN);
     	xhr.setRequestHeader('Authorization', basicAuth(auth));
 
@@ -16,14 +14,14 @@ singleAPICall = function (endpoint, callback){
 }
 
 
-//Make multiple API calls 
+// Make multiple API calls 
 multipleAPICall = function(urls, callbackMulti) {
 
 	var data = {};
 	for (var i=0; i<urls.length; i++) {
-		var callback = function(responseText, apiURL) {
+		var callback = function(responseText, endpoint) {
 
-			data[apiURL] = responseText;
+			data[endpoint] = responseText;
 
 			//update the size of data
 			var size = 0;
@@ -42,7 +40,7 @@ multipleAPICall = function(urls, callbackMulti) {
 };
 
 
-// Specific funciton to parse change info
+// Costum funciton to parse change info
 function parseChangeInfo (data){
 
 	//split it into lines
@@ -57,20 +55,6 @@ function parseChangeInfo (data){
 	data = JSON.parse(data);
 	
 	return data
-}
-
-
-// Get basic info about the change
-function getChangeNumber(changeUrl){
-
-	//check if url ends with "/", remove it
-	if (changeUrl.endsWith('/')) changeUrl = changeUrl.slice(0,-1)
-	
-	/*
-	* TODO: Find a reliable approach
-	* From  <class="style-scope gr-change-view">
-	*/
-	return changeUrl.split("+/")[1].split("/")[0]
 }
 
 
@@ -140,14 +124,9 @@ function getFileContent(project, commitID, fname, callback){
 		"/commits/" + commitID + "/files/" +
 		 fname + "/content"
 
-	/*endpoint = "projects/" + project + 
-		"/branches/" + "master" + "/files/" +
-		 fname + "/content"*/
-
 	// Fire get request to get change info
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		console.log(atob(result))
-		//callback (result)
+		callback (result)
 	})
 
 }
@@ -196,16 +175,17 @@ function getBranchInfo(project, branch, callback){
 }
 
 
-function getBranchTree(project, branch){
+// Get the tree hash of a commit object
+function getTreeHash(project, wants, callback){
 
-	var treeHash = "2508b6d186afb1829dd8510233a9c2b86ee8dd61"
+	// FIXME Pass the haves to optimize the request
 
-	var endpoint = "projects/" + project + "/branches/master/trees/"
-	endpoint = `${HOST_ADDR}/${endpoint}` //+ treeHash + "/content/"
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		console.log(result)
-	})
-
+	// Form the repo URL
+	var repo_url = HOST_ADDR + "/" + project
+	fetchObjects( {repo_url, wants}, ({ data }) => {
+			// Parse the commit object
+			var commit = data[wants[0]].content
+			callback(parseCommitObject(commit).tree)
+		}
+	);
 }
