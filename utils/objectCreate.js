@@ -56,80 +56,71 @@ function getObjectHash(object_wrap){
 }
 
 
-
 /**
-* Form the commit 
+* Form the commit
 */
-function formCommit(treeHash, author, parents, message){
+function formCommit (commit) {
 
-	/*let authorDateTime = new Date()
-	let timestamp = Math.floor(authorDateTime.valueOf() / 1000)
-	//get zone offset in minutes 
-	let timezoneOffset = authorDateTime.getTimezoneOffset()*/
+	let headers = '';
 
-	let [timestamp, timezoneOffset] = determineTime()
+	//First commit has no parent
+	let parents;
+	if (commit.parents)
+		parents = commit.parents;
+	else
+		parents = [];
 
-	// initial commit
-	if (!parents){ 
-		parents = []
-	}
-
-	/* construct the commit*/
-	let commit = {
-		tree: treeHash,
-		parent: parents,
-		author: {
-			name: author.name,
-			email: author.email,
-			timestamp: timestamp,
-			timezoneOffset: timezoneOffset
-		},
-		message
-	}
-
-	return formCommitHeaders(commit) + '\n' + normalize(commit.message)
-}
-
-
-
-/**
-* Form the commit header
-*/
-function formCommitHeaders (obj) {
-
-	let headers = ''
-
-	if (obj.tree) {
-		headers += `tree ${obj.tree}\n`
+	if (commit.tree) {
+		headers += `tree ${commit.tree}\n`
 	} else {// null tree
 		headers += `tree 4b825dc642cb6eb9a060e54bf8d69288fbee4904\n` 
 	}
 
-	//Check if has parent (First commit has no parent)
-	if (obj.parent && obj.parent.length) {
-		//check if it has more than one parent
-		for (let p of obj.parent) {
+	//Check if commit has parent
+	if (parents && parents.length) {
+		for (let p of parents) {
 			headers += 'parent'
 			headers += ' ' + p + '\n'
 		}
 	}
 
-	let author = obj.author
-
+	let author = commit.author
 	headers += `author ${author.name} <${author.email}> ${
 		author.timestamp
 		} ${formatTimezoneOffset(author.timezoneOffset)}\n`
 
-	//No difference between committer and author of GUI commits
-	let committer = obj.author
+	//Check if committer is specified
+	//They are the same in UI commits
+	let committer = author;
+	if (commit.commiter)
+		committer = commit.commiter;
 
 	headers += `committer ${committer.name} <${committer.email}> ${
 		committer.timestamp
 		} ${formatTimezoneOffset(committer.timezoneOffset)}\n`
 
-
-	return headers
+	return headers + '\n' + normalize(commit.message)
 }
+
+
+// Create a sign commit object
+function createSignedCommit(commitInfo, callback){
+	let commit = formCommit(commitInfo);
+
+	// Sing the commit and then form signed commit
+	signContent(authUsername, commit, function(result){
+
+		// Take the commit signature
+		// Since the commitMessage itself has signature
+		// We take the last signature as the commit signature
+		// This approach should work, but FIXME: make sure about it 
+		var signature = isolateSignature (result);
+
+		//Form signed commit
+		callback (formSignedCommit(commit, signature));
+	});
+}
+
 
 
 /**
@@ -164,25 +155,4 @@ function isolateSignature (commit) {
 	return outdent(signature)
 }
 
-
-// Create a sign commit object
-function createSignedCommit(commitInfo, callback){
-
-	// Form the commit 	
-	var commit = formCommit(commitInfo.treeHash, commitInfo.author, 
-		commitInfo.parents, commitInfo.commitMessage)
-
-	// Sing the commit and then form signed commit
-	signContent(authUsername, commit, function(result){
-
-		// Take the commit signature
-		// Since the commitMessage itself has signature
-		// We take the last signature as the commit signature
-		// This approach should work, but FIXME: make sure about it 
-		var signature = isolateSignature (result);
-
-		//Form signed commit
-		callback (formSignedCommit(commit, signature));
-	});
-}
 

@@ -21,41 +21,51 @@ function run(url){
 		//TODO: sync the following API calls
 		// Get info: change branch
 		getRevisionReview(change_id, "current", function(changeInfo){
+	
+			//Get the number of patches in the change branch
+			revisions = getObjetValues(changeInfo.revisions)[0]._number;
 
-			// Get info: common ancestor (parent of the 1st commit in change branch)
-			getRevisionCommit(change_id, "1", function(caInfo){
+			//Get commits in the change branch
+			let urls = formRevisionUrls (change_id, revisions);
 
+			multiFetch({urls, parser:revisionParser}, ({ data }) => {
+
+				//Commit objects in change branch should be sent to the  into packfile
+				let commitObjects = createRevisionCommits(getObjetValues(data));
+	
 				// Get info about the target branch
 				getBranchInfo(project, branch, function(targetInfo){
 					// Populate the parent window
 					setParentInfo (targetInfo);
 
-					// Form heads, Ignore caHead if it's the same as targetHead
-					var parents = {
-						changeHead: changeInfo.current_revision,
-						targetHead: targetInfo.commit
-					};
-					var caHead = caInfo.parents[0].commit
-					if (parents.targetHead !== caHead)
-						parents["caHead"] = caHead					
+					// Form parents, Common ancestor is parent of the 1st revision
+					let {parents} = formParents(changeInfo, data[1], targetInfo);
 					
 					// Run the merge process
 					runMergeProcess(change_id, project, parents,
-						function(treeHash, objects){
+					function(treeHash, objects){
+						//new objects
+						objects = [...objects, ...commitObjects]
+						//remove ca from parents
+						parents = [parents.targetHead, parents.changeHead]
 
-							//TODO: Form a better commit message 
-							var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
-							//remove ca from parents
-							parents = [parents.targetHead, parents.changeHead]
-							pushCommit({ url, project, branch, //changeNumber
-								objects, parents, treeHash, commitMessage }, 
-								({ result }) => {
-								var t1 = performance.now();
-								console.log("Taken time: ", t1 - t0)
-								console.log(result)
-							});
-						}
-					);
+						//TODO: Form a better commit message 
+						var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
+
+						pushCommit({ 
+							url, 
+							project, 
+							branch,
+							objects, 
+							parents, 
+							treeHash, 
+							commitMessage}, 
+						({ result }) => {
+							var t1 = performance.now();
+							console.log("Taken time: ", t1 - t0)
+							console.log(result)
+						});
+					});
 				});
 
 			});
@@ -63,7 +73,6 @@ function run(url){
 		});
 
 	});
-
 }
 
 

@@ -1,19 +1,27 @@
+/*/TODO: Take configs from user
+const SERVER_GH = "github.com";
+const SERVER_GL = "gitlab.com";
+const HOST_GH = `https://${SERVER_GH}`;
+const HOST_GL = `https://${SERVER_GL}`;
+const API_GH = `https://api.${SERVER_GH}`;
+const API_GL = `https://api.${SERVER_GL}`;
+const RPACK = 'git-receive-pack'
+const UPACK = 'git-upload-pack'
+*/
+
+
 var RECEIVEPACK = 'git-receive-pack'
 var UPLOADPACK = 'git-upload-pack'
-
-//FIXME: Take user info automatically
-// OR Add OAuth
-//var authUsername= 'hmd'
 var authUsername= 'admin'
-
+var authPassword = "secret" 
 var authEmail = 'hammad.afzali@gmail.com'
-var authPassword = "rl6PKFtOgQUfN57bMeq8fPt2b56fNTGUJIx/YApuFQ" //PC
+//var authPassword = "UfkRENHIoRquwpgbvftB+9R0knqV3+C3iYQUyw/Vbw" //hmd
 //var authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw" //Laptop
 //var authPassword = "mAwEx0wcFOYz4yIzA9agMC8mRmIVWvV+HTAyvA66pQ" //"secret"
 
-var HOST_ADDR = "http://localhost:8080"
 //var HOST_ADDR = "http://ec2-3-209-56-164.compute-1.amazonaws.com/gerrit/"
-var PUT_URL = "http://hmd@localhost:8080/a"
+var HOST_ADDR = "http://localhost:8080"
+var PUT_URL = "http://hmd@localhost:8080/a"		
 
 var auth = {
 	username: authUsername,
@@ -122,6 +130,12 @@ function extractBetween (str, prefix, suffix) {
 }
 
 
+// Compute the difference between two arrays
+function arrayDifference (arr1, arr2) {
+	return arr1.filter(x => !arr2.includes(x));
+}
+
+
 // Compute the intersect between two arrays
 function arrayIntersect (a, b) {
 	return a.filter(value => -1 !== b.indexOf(value));
@@ -136,17 +150,23 @@ function arrayUniq(array) {
 }
 
 
-// Get the dictionary values
-function dictValues(dict){
-	return Object.keys(dict).map(function(key){
-	    return dict[key];
-	});
-}
-
-
 // Check if obj has keys
 function isEmpty(obj) {
  	return Object.keys(obj).length === 0;
+}
+
+
+// Check if an object is empty
+function isEmpty(obj) {
+  	return Object.keys(obj).length === 0;
+}
+
+
+// Get values from a dictionary
+function getObjetValues(dict){
+	return Object.keys(dict).map(function(key){
+	    return dict[key];
+	});
 }
 
 
@@ -224,13 +244,48 @@ var string_ArrayBuffer = function(str) {
 
 
 // Extract the fpath and ref name of fetched blob
-function getBlobInfo (item){
-	var ref = extractBetween(item, "commits/", "/files")
-	var fpath = extractBetween(item, "files/", "/content")
+function blobParser (item, info, data){
 
-	return {
-		fpath: filePathUnTrim(fpath), 
-		ref
+	let ref = extractBetween(item, "commits/", "/files")
+	let key = extractBetween(item, "files/", "/content")
+	key = filePathUnTrim(key);
+
+	if(key in data == false){
+		data[key] = {}; 
 	}
+
+	data [key][ref] = atob(info);
+	return data;
 }
+
+
+// Extract the fpath and ref name of fetched blob
+function revisionParser (item, info, data){
+
+	let key = extractBetween(item, "revisions/", "/commit")
+
+	data[key] = jsonifyResponse(info);
+	return data;
+}
+
+
+
+
+// Costum funciton to parse change info
+function jsonifyResponse (data){
+
+	//split it into lines
+	data = data.split("\n")
+
+	//remove the first and last line
+	data.shift()
+	data.pop()
+
+	//join array of lines
+	data = data.join("\n")
+	data = JSON.parse(data);
+	
+	return data
+}
+
 

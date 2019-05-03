@@ -1,3 +1,21 @@
+// Fetch multiple data at once
+var multiFetch = async function ({ urls, parser } , callback){
+
+	var data = {};
+	if (urls.length < 1)
+		callback ({ data });
+
+	mutliCallback = function(response) {
+		for(var item in response){
+			parser(item, response[item], data);
+		}
+		callback ({ data });
+	};
+
+	multipleAPICall(urls, mutliCallback);
+}
+
+
 // Make a single api call
 singleAPICall = function (endpoint, callback){
 
@@ -40,24 +58,6 @@ multipleAPICall = function(urls, callbackMulti) {
 };
 
 
-// Costum funciton to parse change info
-function parseChangeInfo (data){
-
-	//split it into lines
-	data = data.split("\n")
-
-	//remove the first and last line
-	data.shift()
-	data.pop()
-
-	//join array of lines
-	data = data.join("\n")
-	data = JSON.parse(data);
-	
-	return data
-}
-
-
 // Get basic info about the change
 function getChangeSummary(cn, callback){
 
@@ -66,7 +66,7 @@ function getChangeSummary(cn, callback){
 	// fire get request to get a summary of change
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
 		//It returns an array of one element
-		callback (parseChangeInfo(result)[0])
+		callback (jsonifyResponse(result)[0])
 	})
 
 }
@@ -81,7 +81,7 @@ function getRevisionCommit(change_id, revision, callback){
 
 	// Fire get request to get change info
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (parseChangeInfo(result))
+		callback (jsonifyResponse(result))
 	})
 
 }
@@ -96,7 +96,7 @@ function getRevisionReview(change_id, revision, callback){
 
 	// fire get request to get all info about the change
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (parseChangeInfo(result))
+		callback (jsonifyResponse(result))
 	})
 	
 }
@@ -111,54 +111,8 @@ function getRevisionFiles(change_id, revision, callback){
 
 	// fire get request to get all info about the change
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (parseChangeInfo(result))
+		callback (jsonifyResponse(result))
 	})	
-}
-
-
-// Get file content
-function getFileContent(project, commitID, fname, callback){
-
-	// Form query
-	endpoint = "projects/" + project + 
-		"/commits/" + commitID + "/files/" +
-		 fname + "/content"
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (result)
-	})
-
-}
-
-
-// Get the head of branch
-function getBranchHead(project, branch, callback){
-
-	// Form query
-	endpoint = "projects/" + project + 
-		"/branches/" + branch
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (parseChangeInfo(result))
-	})
-
-}
-
-
-// Get the head of change branch
-function getCommitInfo(project, commitID, callback){
-
-	// Form query
-	endpoint = "projects/" + project + 
-		"/commits/" + commitID
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (parseChangeInfo(result))
-	})
-
 }
 
 
@@ -175,17 +129,54 @@ function getBranchInfo(project, branch, callback){
 }
 
 
+// Get the head of branch
+function getBranchHead(project, branch, callback){
+
+	// Form query
+	endpoint = "projects/" + project + 
+		"/branches/" + branch
+
+	// Fire get request to get change info
+	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		callback (jsonifyResponse(result))
+	})
+
+}
+
+
+// Get the head of change branch
+function getCommitInfo(project, commitID, callback){
+
+	// Form query
+	endpoint = "projects/" + project + 
+		"/commits/" + commitID
+
+	// Fire get request to get change info
+	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		callback (jsonifyResponse(result))
+	});
+}
+
+
+function getChangeRevisions (change_id, revisions, callback){
+
+	let urls = formRevisionUrls (change_id, revisions);
+
+	multiFetch({ urls}, ({ data }) => {
+		callback(data)
+	});
+}
+
+
 // Get the tree hash of a commit object
-function getTreeHash(project, wants, callback){
+function getTree(project, commitID, callback){
 
-	// FIXME Pass the haves to optimize the request
+	// Form query
+	endpoint = "projects/" + project + 
+		"/trees/" + commitID + "?recursive=1"
 
-	// Form the repo URL
-	var repo_url = HOST_ADDR + "/" + project
-	fetchObjects( {repo_url, wants}, ({ data }) => {
-			// Parse the commit object
-			var commit = data[wants[0]].content
-			callback(parseCommitObject(commit).tree)
-		}
-	);
+	// Fire get request to get change info
+	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		callback (jsonifyResponse(result))
+	})
 }
