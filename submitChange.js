@@ -35,6 +35,8 @@ function run(url){
 	
 				// Get info about the target branch
 				getBranchInfo(project, branch, function(targetInfo){
+			console.log(targetInfo)
+
 					// Populate the parent window
 					setParentInfo (targetInfo);
 
@@ -51,8 +53,8 @@ function run(url){
 
 						//TODO: Form a better commit message 
 						var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
-
-						pushCommit({ 
+						console.log(objects)
+						/*pushCommit({ 
 							url, 
 							project, 
 							branch,
@@ -64,7 +66,7 @@ function run(url){
 							var t1 = performance.now();
 							console.log("Taken time: ", t1 - t0)
 							console.log(result)
-						});
+						});*/
 					});
 				});
 

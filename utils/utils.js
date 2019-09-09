@@ -113,13 +113,13 @@ function replaceAll (str, find, update){
 
 // Replace all "/" occurrences with "%2F"
 function filePathTrim (fpath){
-	return replaceAll(fpath, '/', '%2F')
+	return fpath.replace(/\//g, '%2F');
 }
 
 
-// Replace all "/" occurrences with "%2F"
+// Replace all "%2F" occurrences with "/" 
 function filePathUnTrim (fpath){
-	return replaceAll(fpath, '%2F', '/')
+	return fpath.replace(/%2F/g, '\/');
 }
 
 
@@ -269,8 +269,6 @@ function revisionParser (item, info, data){
 }
 
 
-
-
 // Costum funciton to parse change info
 function jsonifyResponse (data){
 
@@ -287,5 +285,3 @@ function jsonifyResponse (data){
 	
 	return data
 }
-
-

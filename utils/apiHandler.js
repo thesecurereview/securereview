@@ -177,6 +177,7 @@ function getTree(project, commitID, callback){
 
 	// Fire get request to get change info
 	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
+		console.log(result)
 		callback (jsonifyResponse(result))
 	})
 }
