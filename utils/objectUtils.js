@@ -82,12 +82,23 @@ function formatTimezoneOffset (minutes) {
 * Determine timestamp and offset zone
 */
 function determineTime () {
-	let authorDateTime = new Date()
+	let authorDateTime = new Date();
 	let timestamp = Math.floor(authorDateTime.valueOf() / 1000)
 	//get zone offset in minutes 
 	let timezoneOffset = authorDateTime.getTimezoneOffset()
 
 	return [timestamp, timezoneOffset]
+}
+
+
+function formDate({input}){
+	let time;
+	if (input)
+		time = new Date();
+	else
+		time = new Date(input);
+
+	return time.valueOf();
 }
 
 

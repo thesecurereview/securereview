@@ -2,13 +2,14 @@
 (function (Buffer){
 var pako = require('pako')
 
-/*concat array of buffer*/
+// concat array of buffer
 window.bufferConcat = function (array) {
 
 	return Buffer.concat(array)
 }
 
-/*commit object*/
+
+// commit object
 window.createBuffer = function (content, type=null) {
 
 	if (type !== null)
@@ -18,25 +19,23 @@ window.createBuffer = function (content, type=null) {
 }
 
 
-/*tree Object*/
+// tree Object
 window.treeObject = function (tree_entries) {
-
 	return Buffer.concat(
 		tree_entries.map(entry => {
 			let mode = Buffer.from(entry.mode.toString(8))
 			let space = Buffer.from(' ')
 			let path = Buffer.from(entry.path, { encoding: 'utf8' })
 			let nullchar = Buffer.from([0])
-			let oid = Buffer.from(entry.oid.match(/../g).map(n => parseInt(n, 16)))
+			let id = Buffer.from(entry.sha.match(/../g).map(n => parseInt(n, 16)))
 
-			return Buffer.concat([mode, space, path, nullchar, oid])
+			return Buffer.concat([mode, space, path, nullchar, id])
 		})
 	)
-
 }
 
 
-/*wrap object*/
+// wrap object
 window.objectWrap = function (type, object) {
 
 	let buffer = Buffer.concat([
@@ -48,50 +47,28 @@ window.objectWrap = function (type, object) {
 }
 
 
-/*compress object: ready to write*/
+// compress object: ready to write
 window.compressObject = function(object){
 
 	return Buffer.from(pako.deflate(object))
 }
 
 
-/*uncompress object*/
+// uncompress object
 window.decompressObject = function(object){
 
 	return Buffer.from(pako.inflate(object))
 }
 
 
-/*unwrap object
-window.objectUnwrap = function (buffer) {
-
-	let s = buffer.indexOf(32) // first space
-	let i = buffer.indexOf(0) // first null value
-	let type = buffer.slice(0, s).toString('utf8') // get type of object
-	let actualLength = buffer.length - (i + 1)
-	let unwrap = buffer.slice(s + 1, i) // get object content
-	let unwrap = buffer.slice(0, i) // get object content
-
-	// TODO: verify length
-	if (parseInt(length) !== actualLength) {
-		throw new Error(
-		`Length mismatch: expected ${length} bytes but got ${actualLength} instead.`
-		)
-	}
-
-	return unwrap.toString('utf8')
-}*/
-
-
-
 window.concatStreamBuffer = function (stream){
 
-	//TODO exception handler
+	//TODO: exception handler
 	var chunks = []
 	var buf = stream._readableState.buffer.head
 	chunks.push(buf.data)
 
-	//loop over buf data, TODO: check alternative (using on, once, end)
+	//loop over buf data
 	while (buf.next){
 		buf = buf.next
 		chunks.push(buf.data)
@@ -99,7 +76,6 @@ window.concatStreamBuffer = function (stream){
 
 	return Buffer.concat(chunks)
 }
-
 
 
 }).call(this,require("buffer").Buffer)

@@ -7,7 +7,6 @@ function basicAuth (auth) {
 
 //Send request
 function request(method, repo_url, headers, body, callback) {
-
 	if (typeof body === "function") {
 		callback = body;
 		body = undefined;
@@ -97,25 +96,19 @@ function pifyRequest(method, repo_url, headers, resType, body, callback) {
 
 
 //GET request over an endpoint
-function get_endpoint(repo_url, endpoint, auth, callback){
+function get_endpoint({endpoint, auth, resType}, callback){
 
 	let headers = {}
 	if (auth) {
 		headers['Authorization'] = basicAuth(auth)
 	}
+	headers['Accept'] = `application/json`
 
-	repo_url = `${repo_url}/${endpoint}`
-
-	request("GET", repo_url, headers, function(res){
-		if (res.statusCode !== 200) {
-			throw new Error(
-			`HTTP Error: ${res.statusCode}`)
-		}
-
+	request("GET", endpoint, headers, function(res){
 		callback(res.body)
-	})
-
+	});
 }
+
 
 //PUT/POST request over an endpoint
 function post_endpoint(method, repo_url, endpoint, auth, 

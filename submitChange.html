@@ -6,37 +6,35 @@
 		<script src='./submitChange.js'></script>
     		<script src='./keyManagement.js'></script>
 
-		<script src='./utils/requestHandler.js'></script>
-		<script src='./utils/requestParser.js'></script>
+		<script src='./libs/bundleStream.js'></script>
+		<script src='./libs/bundlePackLine.js'></script>
+		<script src='./libs/bundleObject.js'></script>
+		<script src='./libs/bundleGitDelta.js'></script>
+		<script src="./libs/openpgp.js"></script>
+		<script src="./libs/sha1.js"></script>
+
 		<script src='./utils/apiHandler.js'></script>
-		<script src='./utils/pushCommit.js'></script>	
-		<script src='./utils/objectCreate.js'></script>
-		<script src='./utils/objectPackfile.js'></script>
-		<script src='./utils/objectParser.js'></script>
-		<script src='./utils/objectUtils.js'></script>
+		<script src='./utils/apiUtils.js'></script>
+		<script src='./utils/commitUtils.js'></script>
 		<script src='./utils/merge.js'></script>
 		<script src='./utils/mergeUtils.js'></script>
-		<script src='./utils/fileFetch.js'></script>
-		<script src='./utils/utils.js'></script>
-		<script src='./utils/pageRefresh.js'></script>
-
+		<script src='./utils/objectCreate.js'></script>
+		<script src='./utils/objectPackfile.js'></script>
+		<script src='./utils/objectUtils.js'></script>
 		<script src='./utils/packfileParser.js'></script>
 		<script src='./utils/packfileReader.js'></script>
+		<script src='./utils/pushCommit.js'></script>
+		<script src='./utils/pageRefresh.js'></script>
+		<script src='./utils/requestHandler.js'></script>
+		<script src='./utils/requestParser.js'></script>
 		<script src='./utils/streamReader.js'></script>
+		<script src='./utils/utils.js'></script>
 
 		<script src="./xdiff/xmerge.js"></script>
 		<script src="./xdiff/xdiff.js"></script>
 		<script src="./xdiff/xdiffi.js"></script>
 		<script src="./xdiff/xutils.js"></script>
 		<script src="./xdiff/xprepare.js"></script>
-
-		<script src='./libs/bundleStream.js'></script>
-		<script src='./libs/bundlePackLine.js'></script>
-		<script src='./libs/bundleObject.js'></script>
-		<script src='./libs/bundleGitDelta.js'></script>
-
-		<script src="./libs/openpgp.js"></script>
-		<script src="./libs/sha1.js"></script>
 
 		<meta charset="utf-8">
 		<!--link rel="stylesheet" href="css/popup.css">
@@ -47,39 +45,26 @@
 	</head>
 
 	<body class="modal-open" style="padding-right: 15px;">
-
-			<div id="popup"> 
-				<div class="form-group">
-					<label id="title-bar" class="control-label" for="parent_info" >Parent Commit</label>
-					<div class="col-md-4">                     
-						<textarea class="form-control" style="width: 510px; height: 100px;" id="parent_info" name="parent_info" spellcheck="false"></textarea>
-						<br>
-					</div>
-
-					<!--label id="title-bar" class="control-label" for="new_changes" >Changes</label-->
-					<div id="diffoutput" > </div>
+		<div id="popup"> 
+			<div class="form-group">
+				<label id="title-bar" class="control-label" for="parent_info" >Parent Commit</label>
+				<div class="col-md-4">                     
+					<textarea class="form-control" style="width: 510px; height: 100px;" id="parent_info" name="parent_info" spellcheck="false"></textarea>
 					<br>
-
-					<label id="title-bar" class="control-label" for="commit-msg" >Singed Commit</label>
-					<div class="col-md-4">                     
-						<textarea class="form-control" style="width: 510px; height: 130px;" id="commit-msg" name="commit-msg" spellcheck="false"></textarea>
-						<br>
-					</div>
-
-		
-					<!--button id='generate_sing'>Generate & Sign</button-->
-					<button id='merge_change' ><b>Submit Change</b></button>
-
-					<div class="form-group" style="text-align: right;clear:left;">
-						<a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
-
-						<a class="btn btn-primary btn-sm"  href="settings.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
-					</div>
 				</div>
 
-
+				<label id="title-bar" class="control-label" for="commit-msg" >Singed Commit</label>
+				<div class="col-md-4">                     
+					<textarea class="form-control" style="width: 510px; height: 130px;" id="commit-msg" name="commit-msg" spellcheck="false"></textarea>
+					<br>
+				</div>
+	
+				<button id='merge_change' ><b>Submit Change</b></button>
+				<div class="form-group" style="text-align: right;clear:left;">
+					<a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
+					<a class="btn btn-primary btn-sm"  href="settings.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
+				</div>
 			</div>
-
+		</div>
 	</body>
-
 </html>
