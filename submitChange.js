@@ -34,12 +34,11 @@ function run(url) {
                 data
             }) => {
 
-                //Commit objects in change branch should be sent to the  into packfile
+                //Commit objects in change branch should be sent to the packfile
                 let commitObjects = createRevisionCommits(getObjetValues(data));
 
                 // Get info about the target branch
                 getBranchInfo(project, branch, function(targetInfo) {
-                    console.log(targetInfo)
 
                     // Populate the parent window
                     setParentInfo(targetInfo);
@@ -59,7 +58,6 @@ function run(url) {
 
                             //TODO: Form a better commit message 
                             var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
-                            console.log(objects)
                             /*pushCommit({ 
                             	url, 
                             	project, 

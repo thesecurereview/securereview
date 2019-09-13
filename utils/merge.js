@@ -1,8 +1,6 @@
 //  Run the merge process 
 var runMergeProcess = async function(change_id, project, parents, callback) {
 
-    var t0 = performance.now();
-
     /* Merge algorithm:
      * - Differentiate blobs
      * - Get trees for both branches
@@ -10,6 +8,7 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
      * - Create the packfile including 
      * 	new trees/modified,added blobs/head of change branch
      */
+    var t0 = performance.now();
 
     let changeHead = parents.changeHead
     // Get the status of changed files in the change branch
@@ -20,20 +19,29 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
         differentiate_blobs(result);
 
         // Find involved trees/subtrees in the merge
-        var paths = added_files.concat(
-            deleted_files, modified_files);
+        var paths = added_files.concat(deleted_files, modified_files);
         var changed_dirs = getCommonDirs(paths);
 
-        // Get the tree content for PR and target branch
-        getTrees({
-            changed_dirs,
-            parents,
-            project
-        }, ({
-            mtrees,
-            ptrees
-        }) => {
-            // Get urls for needed blobs (added, modified)
+	// Form tree urls that need to be fetched
+	//TODO: Add lablels to dirs to prevent trying to
+	// fetch a tree which does not exist
+	let urls = formTreeUrls(project, parents, changed_dirs);
+
+	// Fetch tree contents for PR and base branch
+	multiFetch({
+		urls,
+		parser: treeParser
+	}, ({
+		data
+	}) => {
+
+                let btrees = formTreeEntries(data[parents.targetHead]);
+                let ptrees = formTreeEntries(data[parents.changeHead]);
+
+
+		console.log(btrees, ptrees)
+
+            /*/ Get urls for needed blobs (added, modified)
             let urls = formBlobUrls(project, parents,
                 added_files, modified_files);
 
@@ -81,7 +89,7 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                 newObjects = [...newObjects, ...newTreeObjects];
 
                 callback(treeHash, newObjects);
-            });
+            });*/
         });
     });
 }

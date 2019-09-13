@@ -1,183 +1,140 @@
-// Fetch multiple data at once
-var multiFetch = async function ({ urls, parser } , callback){
-
-	var data = {};
-	if (urls.length < 1)
-		callback ({ data });
-
-	mutliCallback = function(response) {
-		for(var item in response){
-			parser(item, response[item], data);
-		}
-		callback ({ data });
-	};
-
-	multipleAPICall(urls, mutliCallback);
-}
-
-
 // Make a single api call
-singleAPICall = function (endpoint, callback){
-
-	var xhr = new XMLHttpRequest();
-	xhr.onload = function(){
-		callback(this.responseText, endpoint);
- 	};
-
-	xhr.open('get', endpoint, true);
-    	//xhr.setRequestHeader('Authorization', 'token ' + TOKEN);
-    	xhr.setRequestHeader('Authorization', basicAuth(auth));
-
-	xhr.send();
+singleAPICall = function(endpoint, callback) {
+    get_endpoint({endpoint, auth}, function(result) {
+        callback (result, endpoint)
+    })
 }
 
 
 // Make multiple API calls 
 multipleAPICall = function(urls, callbackMulti) {
-
-	var data = {};
-	for (var i=0; i<urls.length; i++) {
-		var callback = function(responseText, endpoint) {
-
-			data[endpoint] = responseText;
-
-			//update the size of data
-			var size = 0;
-			for (var index in data) {
-				if (data.hasOwnProperty(index))
-					size ++;
+    var data = {};
+    for (var i = 0; i < urls.length; i++) {
+        var callback = function(response, endpoint) {
+		var size = 0;
+		data[endpoint] = response;
+		//update the size of data
+		for (var index in data) {
+			if (data.hasOwnProperty(index))
+			    size++;
 			}
+		if (size == urls.length) {
+			callbackMulti(data);
+		}
+        };
 
-			if (size == urls.length){
-				callbackMulti(data);
-			}
-		};
-
-		singleAPICall(urls[i], callback);
-	}
-};
-
-
-// Get basic info about the change
-function getChangeSummary(cn, callback){
-
-	var endpoint = "changes/?q=change:" + cn
-
-	// fire get request to get a summary of change
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		//It returns an array of one element
-		callback (jsonifyResponse(result)[0])
-	})
-
+        singleAPICall(urls[i], callback);
+    }
 }
 
 
-// Get the head of change branch
-function getRevisionCommit(change_id, revision, callback){
+// Fetch multiple data at once
+var multiFetch = async function({
+    urls,
+    parser
+}, callback) {
 
-	// Form query
-	endpoint = "changes/" + change_id + 
-		"/revisions/" + revision + "/commit"
+    var data = {};
+    if (urls.length < 1)
+        callback({
+            data
+        });
 
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (jsonifyResponse(result))
-	})
+    mutliCallback = function(response) {
+        for (var item in response) {
+            parser({item, info:response[item], data});
+        }
+        callback({
+            data
+        });
+    };
 
+    multipleAPICall(urls, mutliCallback);
 }
 
 
-// Get details about the change
-function getRevisionReview(change_id, revision, callback){
+// Get the summary of a change
+function getChangeSummary(cn, callback) {
 
-	// form query
-	var endpoint = "changes/" + change_id + 
-		"/revisions/" + revision + "/review"
-
-	// fire get request to get all info about the change
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (jsonifyResponse(result))
-	})
-	
+    let endpoint = `${HOST_ADDR}/changes/?q=change:${cn}`;
+    get_endpoint({endpoint, auth}, function(result) {
+        //It returns an array of one element
+        callback(jsonifyResponse(result)[0])
+    })
 }
 
 
-// Get details about the change
-function getRevisionFiles(change_id, revision, callback){
+// Get the head of revision
+function getRevisionCommit(change_id, revision, callback) {
 
-	// form query
-	var endpoint = "changes/" + change_id + 
-		"/revisions/" + revision + "/files"
-
-	// fire get request to get all info about the change
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (jsonifyResponse(result))
-	})	
+    let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/commit`;
+    get_endpoint({endpoint, auth}, function(result) {
+        callback(jsonifyResponse(result))
+    })
 }
 
 
-// Get the head of a branch
-function getBranchInfo(project, branch, callback){
+// Get reviews for a change
+function getRevisionReview(change_id, revision, callback) {
 
-	getBranchHead(project, branch, function(result){
-		// Get the details of the base branch
-		getCommitInfo(project, result.revision, function(result){
-			callback(result)
-		});
+    let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/review`;
+    get_endpoint({endpoint, auth}, function(result) {
+        callback(jsonifyResponse(result))
+    })
+}
 
-	});
+
+// Get details about files changed under a revision
+function getRevisionFiles(change_id, revision, callback) {
+
+    let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/files`;
+    get_endpoint({endpoint, auth}, function(result) {
+        callback(jsonifyResponse(result))
+    })
+}
+
+
+// Get the info about a commit
+function getCommitInfo(project, commitID, callback) {
+
+    let endpoint = `${HOST_ADDR}/projects/${project}/commits/${commitID}`;
+    get_endpoint({endpoint, auth}, function(result) {
+        callback(jsonifyResponse(result))
+    });
 }
 
 
 // Get the head of branch
-function getBranchHead(project, branch, callback){
+function getBranchHead(project, branch, callback) {
 
-	// Form query
-	endpoint = "projects/" + project + 
-		"/branches/" + branch
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (jsonifyResponse(result))
-	})
-
+    let endpoint = `${HOST_ADDR}/projects/${project}/branches/${branch}`;
+    get_endpoint({endpoint, auth}, function(result) {
+        callback(jsonifyResponse(result))
+    })
 }
 
 
-// Get the head of change branch
-function getCommitInfo(project, commitID, callback){
+// Get the info about a branch
+function getBranchInfo(project, branch, callback) {
 
-	// Form query
-	endpoint = "projects/" + project + 
-		"/commits/" + commitID
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		callback (jsonifyResponse(result))
-	});
+    getBranchHead(project, branch, function(result) {
+        // Get the details of the base branch
+        getCommitInfo(project, result.revision, function(result) {
+            callback(result)
+        });
+    });
 }
 
 
-function getChangeRevisions (change_id, revisions, callback){
+// Get all revisions for a change
+function getChangeRevisions(change_id, revisions, callback) {
 
-	let urls = formRevisionUrls (change_id, revisions);
-
-	multiFetch({ urls}, ({ data }) => {
-		callback(data)
-	});
-}
-
-
-// Get the tree hash of a commit object
-function getTree(project, commitID, callback){
-
-	// Form query
-	endpoint = "projects/" + project + 
-		"/trees/" + commitID + "?recursive=1"
-
-	// Fire get request to get change info
-	get_endpoint(HOST_ADDR, endpoint, auth, function (result){ 
-		console.log(result)
-		callback (jsonifyResponse(result))
-	})
+    let urls = formRevisionUrls(change_id, revisions);
+    multiFetch({
+        urls
+    }, ({
+        data
+    }) => {
+        callback(data)
+    });
 }

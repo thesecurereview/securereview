@@ -9,7 +9,9 @@ const RPACK = 'git-receive-pack'
 const UPACK = 'git-upload-pack'
 */
 
-
+var HOST_ADDR = "http://localhost:8080"
+var GET_URL = "http://hmd@localhost:8080"
+var PUT_URL = "http://hmd@localhost:8080/a"
 var RECEIVEPACK = 'git-receive-pack'
 var UPLOADPACK = 'git-upload-pack'
 var authUsername= 'admin'
@@ -19,9 +21,22 @@ var authEmail = 'hammad.afzali@gmail.com'
 //var authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw" //Laptop
 //var authPassword = "mAwEx0wcFOYz4yIzA9agMC8mRmIVWvV+HTAyvA66pQ" //"secret"
 
-//var HOST_ADDR = "http://ec2-3-209-56-164.compute-1.amazonaws.com/gerrit/"
-var HOST_ADDR = "http://localhost:8080"
-var PUT_URL = "http://hmd@localhost:8080/a"		
+/*
+Binary			Hex	Octal	Decimal
+1000 000 110100100	81A4	100644	33188	regular file
+1000 000 111101101	81ED	100755	33261	regular file
+1010 000 000000000	A000	120000	40960	symlink
+1110 000 000000000	E000	160000	57344	gitlink
+0100 000 000000000	4000	40000	16384	tree
+*/
+var FILEMODE = {
+	"33188" : "100644",
+	"33261" : "100755",
+	"40960" : "120000",
+	"57344" : "160000",
+	"16384" : "40000"
+}
+		
 
 var auth = {
 	username: authUsername,
@@ -127,6 +142,13 @@ function filePathUnTrim (fpath){
 function extractBetween (str, prefix, suffix) {
 	str = str.substring(str.indexOf(prefix) + prefix.length);
 	return str.substring(0, str.indexOf(suffix));
+}
+
+
+
+// Eextract everything after last dilemma
+function extractAfter(str, dilemma) {
+    return str.split(dilemma)[1];
 }
 
 
@@ -240,48 +262,4 @@ var string_ArrayBuffer = function(str) {
 		size: Uint16Array.from(str, function(x, i) {
 			return str.charCodeAt(i)}).length
 	}
-}
-
-
-// Extract the fpath and ref name of fetched blob
-function blobParser (item, info, data){
-
-	let ref = extractBetween(item, "commits/", "/files")
-	let key = extractBetween(item, "files/", "/content")
-	key = filePathUnTrim(key);
-
-	if(key in data == false){
-		data[key] = {}; 
-	}
-
-	data [key][ref] = atob(info);
-	return data;
-}
-
-
-// Extract the fpath and ref name of fetched blob
-function revisionParser (item, info, data){
-
-	let key = extractBetween(item, "revisions/", "/commit")
-
-	data[key] = jsonifyResponse(info);
-	return data;
-}
-
-
-// Costum funciton to parse change info
-function jsonifyResponse (data){
-
-	//split it into lines
-	data = data.split("\n")
-
-	//remove the first and last line
-	data.shift()
-	data.pop()
-
-	//join array of lines
-	data = data.join("\n")
-	data = JSON.parse(data);
-	
-	return data
 }

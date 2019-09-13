@@ -1,3 +1,23 @@
+// Costum funciton to parse change info
+function jsonifyResponse (content){
+	/*GERRIT_MAGIC_JSON_PREFIX = ")]}\'\n"
+    	if (content.startsWith(GERRIT_MAGIC_JSON_PREFIX))
+        	content = content.substr(GERRIT_MAGIC_JSON_PREFIX.length)*/
+
+	//split it into lines
+	content = content.split("\n")
+
+	//remove the first and last line
+	content.shift()
+	content.pop()
+
+	//join array of lines
+	content = content.join("\n")
+	
+	return JSON.parse(content)
+}
+
+
 // Parse GET response
 function parseGETResponse(data, service){
 
