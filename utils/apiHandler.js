@@ -1,7 +1,10 @@
 // Make a single api call
 singleAPICall = function(endpoint, callback) {
-    get_endpoint({endpoint, auth}, function(result) {
-        callback (result, endpoint)
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(result, endpoint)
     })
 }
 
@@ -11,16 +14,16 @@ multipleAPICall = function(urls, callbackMulti) {
     var data = {};
     for (var i = 0; i < urls.length; i++) {
         var callback = function(response, endpoint) {
-		var size = 0;
-		data[endpoint] = response;
-		//update the size of data
-		for (var index in data) {
-			if (data.hasOwnProperty(index))
-			    size++;
-			}
-		if (size == urls.length) {
-			callbackMulti(data);
-		}
+            var size = 0;
+            data[endpoint] = response;
+            //update the size of data
+            for (var index in data) {
+                if (data.hasOwnProperty(index))
+                    size++;
+            }
+            if (size == urls.length) {
+                callbackMulti(data);
+            }
         };
 
         singleAPICall(urls[i], callback);
@@ -42,7 +45,11 @@ var multiFetch = async function({
 
     mutliCallback = function(response) {
         for (var item in response) {
-            parser({item, info:response[item], data});
+            parser({
+                item,
+                info: response[item],
+                data
+            });
         }
         callback({
             data
@@ -57,9 +64,14 @@ var multiFetch = async function({
 function getChangeSummary(cn, callback) {
 
     let endpoint = `${HOST_ADDR}/changes/?q=change:${cn}`;
-    get_endpoint({endpoint, auth}, function(result) {
-        //It returns an array of one element
-        callback(jsonifyResponse(result)[0])
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        //In this case, jsonify returns an array of one element
+        callback(jsonifyResponse({
+            content: result
+        })[0])
     })
 }
 
@@ -68,8 +80,13 @@ function getChangeSummary(cn, callback) {
 function getRevisionCommit(change_id, revision, callback) {
 
     let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/commit`;
-    get_endpoint({endpoint, auth}, function(result) {
-        callback(jsonifyResponse(result))
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(jsonifyResponse({
+            content: result
+        }))
     })
 }
 
@@ -78,8 +95,13 @@ function getRevisionCommit(change_id, revision, callback) {
 function getRevisionReview(change_id, revision, callback) {
 
     let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/review`;
-    get_endpoint({endpoint, auth}, function(result) {
-        callback(jsonifyResponse(result))
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(jsonifyResponse({
+            content: result
+        }))
     })
 }
 
@@ -88,8 +110,13 @@ function getRevisionReview(change_id, revision, callback) {
 function getRevisionFiles(change_id, revision, callback) {
 
     let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/files`;
-    get_endpoint({endpoint, auth}, function(result) {
-        callback(jsonifyResponse(result))
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(jsonifyResponse({
+            content: result
+        }))
     })
 }
 
@@ -98,8 +125,13 @@ function getRevisionFiles(change_id, revision, callback) {
 function getCommitInfo(project, commitID, callback) {
 
     let endpoint = `${HOST_ADDR}/projects/${project}/commits/${commitID}`;
-    get_endpoint({endpoint, auth}, function(result) {
-        callback(jsonifyResponse(result))
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(jsonifyResponse({
+            content: result
+        }))
     });
 }
 
@@ -108,8 +140,13 @@ function getCommitInfo(project, commitID, callback) {
 function getBranchHead(project, branch, callback) {
 
     let endpoint = `${HOST_ADDR}/projects/${project}/branches/${branch}`;
-    get_endpoint({endpoint, auth}, function(result) {
-        callback(jsonifyResponse(result))
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(jsonifyResponse({
+            content: result
+        }))
     })
 }
 
