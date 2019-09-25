@@ -1,4 +1,3 @@
-var t0;
 /**
  * Submit merge request:
  *  - compare target and change branches
@@ -11,7 +10,7 @@ function run(url) {
     // Get change number
     var cn = getChangeNumber(url)
     // Get a summary of change
-    getChangeSummary(cn, function(result) {
+    getChangeSummary(cn, (result) => {
         var project = result.project
         var branch = result.branch
         var change_id = result.change_id
@@ -19,7 +18,7 @@ function run(url) {
 
         //TODO: sync the following API calls
         // Get info: change branch
-        getRevisionReview(change_id, "current", function(changeInfo) {
+        getRevisionReview(change_id, "current", (changeInfo) => {
 
             //Get the number of patches in the change branch
             revisions = getObjetValues(changeInfo.revisions)[0]._number;
@@ -34,11 +33,11 @@ function run(url) {
                 data
             }) => {
 
-                //Commit objects in change branch should be sent to the packfile
+                //Commit objects in change branch should be as part of the packfile
                 let commitObjects = createRevisionCommits(getObjetValues(data));
 
                 // Get info about the target branch
-                getBranchInfo(project, branch, function(targetInfo) {
+                getBranchInfo(project, branch, (targetInfo) => {
 
                     // Populate the parent window
                     setParentInfo(targetInfo);
@@ -50,7 +49,7 @@ function run(url) {
 
                     // Run the merge process
                     runMergeProcess(change_id, project, parents,
-                        function(treeHash, objects) {
+                        (treeHash, objects) => {
                             //new objects
                             objects = [...objects, ...commitObjects]
                             //remove ca from parents
@@ -68,7 +67,6 @@ function run(url) {
                             	commitMessage}, 
                             ({ result }) => {
                             	var t1 = performance.now();
-                            	console.log("Taken time: ", t1 - t0)
                             	console.log(result)
                             });*/
                         });
@@ -89,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
             currentWindow: true
         },
         function(tabs) {
-            t0 = performance.now();
             url = tabs[0].url;
             run(url);
         });

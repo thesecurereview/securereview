@@ -8,7 +8,6 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
      * - Create the packfile including 
      * 	new trees/modified,added blobs/head of change branch
      */
-    var t0 = performance.now();
 
     let changeHead = parents.changeHead
     // Get the status of changed files in the change branch
@@ -23,8 +22,8 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
         var changed_dirs = getCommonDirs(paths);
 
 	// Form tree urls that need to be fetched
-	//TODO: Add lablels to dirs to prevent trying to
-	// fetch a tree which does not exist
+	// TODO: Add lablels to dirs to prevent trying to
+	// Fetch a tree which does not exist
 	let urls = formTreeUrls(project, parents, changed_dirs);
 
 	// Fetch tree contents for PR and base branch
@@ -34,19 +33,12 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
 	}, ({
 		data
 	}) => {
-
                 let btrees = formTreeEntries(data[parents.targetHead]);
                 let ptrees = formTreeEntries(data[parents.changeHead]);
-
-
-		console.log(btrees, ptrees)
 
             /*/ Get urls for needed blobs (added, modified)
             let urls = formBlobUrls(project, parents,
                 added_files, modified_files);
-
-            var t1 = performance.now();
-            console.log("Taken time for tree reconstruction: ", t1 - t0)
 
             // Fetch all needed blobs
             multiFetch({
@@ -68,7 +60,7 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                     added_files,
                     deleted_files,
                     modified_files,
-                    master_trees: mtrees,
+                    master_trees: btrees,
                     pr_trees: ptrees
                 });
 

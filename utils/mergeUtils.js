@@ -108,9 +108,7 @@ function differentiate_blobs (files){
 }
 
 
-/**
-* Update the bottom trees based on the change
-*/
+//Update the bottom trees based on the change
 function mergeBottomTree ({
 	parents, 
 	blobs, 
@@ -201,9 +199,7 @@ function mergeBottomTree ({
 }
 
 
-/**
-* Propagate the update to the root tree
-*/
+// Propagate the update to the root tree
 function propagateUpdate({ changed_dirs, master_trees }){
 
 	// Reverse change dirs to start from bottom
