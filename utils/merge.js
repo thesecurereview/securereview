@@ -1,4 +1,4 @@
-//  Run the merge process 
+// Run the merge process 
 var runMergeProcess = async function(change_id, project, parents, callback) {
 
     /* Merge algorithm:
@@ -21,22 +21,22 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
         var paths = added_files.concat(deleted_files, modified_files);
         var changed_dirs = getCommonDirs(paths);
 
-	// Form tree urls that need to be fetched
-	// TODO: Add lablels to dirs to prevent trying to
-	// Fetch a tree which does not exist
-	let urls = formTreeUrls(project, parents, changed_dirs);
+        // Form tree urls that need to be fetched
+        // TODO: Add lablels to dirs to prevent trying to
+        // Fetch a tree which does not exist
+        let urls = formTreeUrls(project, parents, changed_dirs);
 
-	// Fetch tree contents for PR and base branch
-	multiFetch({
-		urls,
-		parser: treeParser
-	}, ({
-		data
-	}) => {
-                let btrees = formTreeEntries(data[parents.targetHead]);
-                let ptrees = formTreeEntries(data[parents.changeHead]);
+        // Fetch tree contents for PR and base branch
+        multiFetch({
+            urls,
+            parser: treeParser
+        }, ({
+            data
+        }) => {
+            let btrees = formTreeEntries(data[parents.targetHead]);
+            let ptrees = formTreeEntries(data[parents.changeHead]);
 
-            /*/ Get urls for needed blobs (added, modified)
+            // Get urls for needed blobs (added, modified)
             let urls = formBlobUrls(project, parents,
                 added_files, modified_files);
 
@@ -46,8 +46,8 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                 parser: blobParser
             }, ({
                 data
-            }) => {
-                //TODO:Merge modified blobs in advance
+            }) => {console.log(data)
+                /*/TODO:Merge modified blobs in advance
 
                 // Update the bottom tree
                 let {
@@ -80,8 +80,8 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                 //New blob/tree objects will appear in the packfile
                 newObjects = [...newObjects, ...newTreeObjects];
 
-                callback(treeHash, newObjects);
-            });*/
+                callback(treeHash, newObjects);*/
+            });
         });
     });
 }

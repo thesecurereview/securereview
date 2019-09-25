@@ -1,4 +1,4 @@
-/*/
+/*
 TODO: Take configs from user
 const SERVER_GH = "github.com";
 const SERVER_GL = "gitlab.com";

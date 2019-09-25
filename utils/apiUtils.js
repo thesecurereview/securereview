@@ -40,9 +40,10 @@ function formBlobUrls(project, parents,
 
     // If targetHead and caHead are not the same, fetch files for caHead
     let caRefs = []
-    if (parents.hasOwnProperty("caHead"))
+    if (parents["caHead"] !== undefined)
         caRefs = blobUrls(project, parents.caHead,
-            modified_files)
+            modified_files);
+
     let targetRefs = blobUrls(project, parents.targetHead,
         modified_files)
     let changeRefs = blobUrls(project, parents.changeHead, [...added_files, ...modified_files])
@@ -55,7 +56,7 @@ function formBlobUrls(project, parents,
 function blobUrls(project, head, files) {
 
     let endpoint = `projects/${project}/commits`
-    endpoint = `${HOST_ADDR}/${endpoint}/${head}/files/`
+    endpoint = `${HOST_ADDR}/${endpoint}/${head}/files`
 
     let urls = [];
     for (f in files) {
