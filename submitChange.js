@@ -56,8 +56,9 @@ function run(url) {
                             parents = [parents.targetHead, parents.changeHead]
 
                             //TODO: Form a better commit message 
-                            var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
-                            /*pushCommit({ 
+                            var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`;
+
+                            pushCommit({ 
                             	url, 
                             	project, 
                             	branch,
@@ -68,7 +69,7 @@ function run(url) {
                             ({ result }) => {
                             	var t1 = performance.now();
                             	console.log(result)
-                            });*/
+                            });
                         });
                 });
 

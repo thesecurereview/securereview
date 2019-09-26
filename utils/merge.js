@@ -64,9 +64,11 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                     pr_trees: ptrees
                 });
 
-                /*/ Remove newdirs before starting propagateUpdate process
+                // Remove newdirs before starting propagateUpdate process
                 // as they are already added during mergeBottomTree process
                 changed_dirs = arrayDifference(changed_dirs, newdirs);
+		// Reverse change dirs to start from bottom
+		changed_dirs = changed_dirs.reverse();
 
                 // Propagate the update to get new root tree hash
                 let {
@@ -80,7 +82,7 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                 //New blob/tree objects will appear in the packfile
                 newObjects = [...newObjects, ...newTreeObjects];
 
-                callback(treeHash, newObjects);*/
+                callback(treeHash, newObjects);
             });
         });
     });

@@ -22,16 +22,15 @@ function pushCommit({
         parents,
         author,
         message: commitMessage
-    }, function(commit) {
+    }, (commit) => {
 
         // Create final Git commit object
         var type = "commit";
         var obj = createGitObject(type, commit);
         objects.push([type, obj.object]);
 
-        // Form the repo URL
-        var repo_url = HOST_ADDR + "/" + project
         // Push the commit to the server
+        var repo_url = `${HOST_ADDR}/${project}`;
         pushObjects({
                 repo_url,
                 auth,
@@ -40,7 +39,7 @@ function pushCommit({
                 newHead: obj.id,
                 objects
             },
-            function(result) {
+            (result) => {
                 //TODO: Prase the response and take action
                 //parseSendPackResult (result)
                 callback({

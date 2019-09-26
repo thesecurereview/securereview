@@ -1,5 +1,4 @@
 "use strict";
-
 // object types: encoded in bits
 const types = {
 	commit: 0b0010000,
@@ -9,9 +8,164 @@ const types = {
 }
 
 
-/**
-* Create a packfile to push Git objects
-*/
+//Create a packfile to fetch Git objects
+function fetchPackLine ({
+	caps = [],
+	wants = [],
+	haves = [],
+	shallows = [],
+	//depth = null, //Limit fetching to the specified number of commits from the tip of each remote branch history	
+	deepen = null, 	//Limit fetching to the specified number of commits from the current shallow boundary
+	since = null,	//Shorten the history of a shallow repository to include all reachable commits after <date>
+	exclude = [] 	//Shorten the history of a repository to exclude commits reachable from a specified remote branch/tag. 
+}){
+	let packstream = getStream()
+
+ 	//wants = [...new Set(wants)] // remove duplicates
+	for (const oid of wants) {
+		let packLine = `want ${oid}${caps}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+		//caps go only with the first line
+		caps = ''
+	}
+
+	for (const oid of shallows) {
+		let packLine = `shallow ${oid}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+	if (deepen !== null) {
+		let packLine = `deepen ${deepen}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+	if (since !== null) {
+		let packLine = `deepen-since ${Math.floor(since.valueOf() / 1000)}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+	for (const oid of exclude) {
+		let packLine = `deepen-not ${oid}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+	packstream.write(packLineFlush())
+
+	//FIXME check if works well
+	for (const oid of haves) {
+		let packLine = `have ${oid}\n`
+		packstream.write(
+			packLineEncode(packLine)
+		)
+	}
+
+ 	packstream.end(packLineEncode(`done\n`))
+
+	return packstream	
+}
+
+
+// Fetch Git objects from the server
+var fetchObjects = async function({ repo_url, wants, haves, since, exclude, refs }, callback){
+	
+	// Set upload service 
+	var service = UPLOADPACK
+
+	// Run git-upload-pack process
+	get_req(repo_url, service, auth, function (httpResponse){
+
+		let capabilities = filterCaps(httpResponse.capabilities)
+		
+		// WANTS: Check if wants are provided, otherwise take them from refs
+		if (!wants){
+			for (i in refs){
+				let head;
+				if (refs[i].startsWith('refs'))
+					head = httpResponse.refs.get(refs[i])
+				else
+					head = httpResponse.refs.get(`refs/heads/${refs[i]}`)
+		
+				wants.push(head)
+			}	
+		}
+
+		// HAVES: Check if haves are provided
+		if (!haves){
+			haves = []
+		}
+
+		// SHALLOWS: Check if shallow is supported
+		let shallows = capabilities.includes('shallow') ? [...wants] : []
+
+		// DEEPEN SINCE
+		since = capabilities.includes('deepen-since') ? [...since] : null		
+
+		// DEEPEN NOT
+		exclude = capabilities.includes('deepen-not') ? [...exclude] : []		
+
+		// DEEPEN //TODO: Support for any deepn number
+		let deepen = 1 
+
+		// CAPS
+		capabilities = ` ${capabilities.join(' ')}`
+
+		// Create the packstream
+		var stream = fetchPackLine ({
+			capabilities,
+			wants,
+			haves,
+			shallows,
+			since, //since = new Date("Wed Mar 13 2019 12:06:21 GMT-0400")
+			exclude,
+			deepen 
+		});
+
+		// Ask for the objects (wants)
+		post_req(
+			repo_url,
+			service,
+			auth,
+			stream, 
+			function (result) {
+
+				/*
+				//TODO: Parse the packfile header
+				let { packfile, shallows, nak } = 
+					parsePackfileResponse(result)
+
+				//Check if nak message is received
+				if (nak != true)
+					throw new Error ('The packfile is not retrieved correctly')
+				*/
+
+				result = new Uint8Array(result);
+				//data = data.slice(8, data.byteLength) // "008NAK\n"
+				let packfile = result.slice(12, result.byteLength) //"00000008NAK\n"
+
+				//TODO: check the packfile sha1
+				let packfileSha = toHexString(packfile.slice(-20))
+
+				// Read the packfile
+				readFromPack(packfile).then(function(data){
+					callback({ data })
+				});
+			}
+		);
+	});
+}
+
+
+//Create a packfile to push Git objects
 var pushPackLine = async function ({
 	objects,
 	outputStream
@@ -82,84 +236,13 @@ var pushPackLine = async function ({
 }
 
 
-/**
-* Create a packfile to fetch Git objects
-*/
-function fetchPackLine ({
-	caps = [],
-	wants = [],
-	haves = [],
-	shallows = [],
-	//depth = null, //Limit fetching to the specified number of commits from the tip of each remote branch history	
-	deepen = null, 	//Limit fetching to the specified number of commits from the current shallow boundary
-	since = null,	//Shorten the history of a shallow repository to include all reachable commits after <date>
-	exclude = [] 	//Shorten the history of a repository to exclude commits reachable from a specified remote branch/tag. 
-}){
-	let packstream = getStream()
-
- 	//wants = [...new Set(wants)] // remove duplicates
-	for (const oid of wants) {
-		let packLine = `want ${oid}${caps}\n`
-		packstream.write(
-			packLineEncode(packLine)
-		)
-		//caps go only with the first line
-		caps = ''
-	}
-
-	for (const oid of shallows) {
-		let packLine = `shallow ${oid}\n`
-		packstream.write(
-			packLineEncode(packLine)
-		)
-	}
-
-	if (deepen !== null) {
-		let packLine = `deepen ${deepen}\n`
-		packstream.write(
-			packLineEncode(packLine)
-		)
-	}
-
-	if (since !== null) {
-		let packLine = `deepen-since ${Math.floor(since.valueOf() / 1000)}\n`
-		packstream.write(
-			packLineEncode(packLine)
-		)
-	}
-
-	for (const oid of exclude) {
-		let packLine = `deepen-not ${oid}\n`
-		packstream.write(
-			packLineEncode(packLine)
-		)
-	}
-
-	packstream.write(packLineFlush())
-
-	//FIXME check if works well
-	for (const oid of haves) {
-		let packLine = `have ${oid}\n`
-		packstream.write(
-			packLineEncode(packLine)
-		)
-	}
-
- 	packstream.end(packLineEncode(`done\n`))
-
-	return packstream	
-}
-
-
-/**
-* Push Git objects to the server
-*/
+//Push Git objects to the server
 var pushObjects = function ({ 
 	repo_url, auth, branch, changeNumber, 
 	oldHead, newHead, objects }, callback){ 
 
 	// Set upload service 
-	var service = RECEIVEPACK
+	var service = RECEIVEPACK;
 
 	// Run git-upload-pack process
 	get_req(repo_url, service, auth, function (httpResponse){
@@ -193,8 +276,8 @@ var pushObjects = function ({
 			objects,
 			outputStream: packstream
 		})
-
-		// POST the packfile
+console.log(outputStream)
+		/*/ POST the packfile
 		let streamData = connect({
 			service: 'git-receive-pack',
 			repo_url,
@@ -202,101 +285,6 @@ var pushObjects = function ({
 			stream: packstream
 		}, function (result) {
 			callback(result)
-		})
+		})*/
 	})
 }
-
-
-/**
-* Fetch Git objects from the server
-*/
-var fetchObjects = async function({ repo_url, wants, haves, since, exclude, refs }, callback){
-	
-	// Set upload service 
-	var service = UPLOADPACK
-
-	// Run git-upload-pack process
-	get_req(repo_url, service, auth, function (httpResponse){
-
-		let capabilities = filterCaps(httpResponse.capabilities)
-		
-		// WANTS: Check if wants are provided, otherwise take them from refs
-		if (!wants){
-			for (i in refs){
-				let head;
-				if (refs[i].startsWith('refs'))
-					head = httpResponse.refs.get(refs[i])
-				else
-					head = httpResponse.refs.get(`refs/heads/${refs[i]}`)
-		
-				wants.push(head)
-			}	
-		}
-
-		// HAVES: Check if haves are provided
-		if (!haves){
-			haves = []
-		}
-
-		// SHALLOWS: Check if shallow is supported
-		let shallows = capabilities.includes('shallow') ? [...wants] : []
-
-		// DEEPEN SINCE
-		since = capabilities.includes('deepen-since') ? [...since] : null		
-
-		// DEEPEN NOT
-		exclude = capabilities.includes('deepen-not') ? [...exclude] : []		
-
-		// DEEPEN //TODO: Support for any deepn number
-		let deepen = 1 
-
-		// CAPS
-		capabilities = ` ${capabilities.join(' ')}`
-
-		// Create the packstream
-		var stream = fetchPackLine ({
-			capabilities,
-			wants,
-			haves,
-			shallows,
-			since, //since = new Date("Wed Mar 13 2019 12:06:21 GMT-0400")
-			exclude,
-			deepen 
-		});
-
-		// Ask for the objects (wants)
-		post_req(
-			repo_url,
-			service,
-			auth,
-			stream, 
-			function (result) {
-				//console.log(result)
-
-				/*/TODO: Parse the packfile header
-				let { packfile, shallows, nak } = 
-					parsePackfileResponse(result)
-
-				//Check if nak message is received
-				if (nak != true)
-					throw new Error ('The packfile is not retrieved correctly')
-				*/
-
-				result = new Uint8Array(result);
-				//data = data.slice(8, data.byteLength) // "008NAK\n"
-				let packfile = result.slice(12, result.byteLength) //"00000008NAK\n"
-
-				//TODO: check the packfile sha1
-				let packfileSha = toHexString(packfile.slice(-20))
-
-				// Read the packfile
-				readFromPack(packfile).then(function(data){
-					callback({ data })
-				});
-			}
-		);
-	});
-}
-
-
-
