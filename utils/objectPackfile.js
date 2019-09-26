@@ -308,7 +308,7 @@ var pushObjects = function({
             auth,
             stream: packstream
         }, (result) => {
-            callback(result)
+            callback(result);
         })
     })
 }

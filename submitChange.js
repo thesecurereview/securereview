@@ -101,14 +101,12 @@ function pushCommit() {
             branch: commitInfo.branch,
             oldHead: parents[0],
             newHead: obj.id,
-            objects
+            objects:finalObjects
         },
         (result) => {
             //TODO: Prase the response and take action
             //parseSendPackResult (result)
-            callback({
-                result
-            });
+            console.log(result);
         });
 }
 
