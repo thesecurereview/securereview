@@ -130,7 +130,7 @@ function post_endpoint(method, repo_url, endpoint, auth,
         headers,
         null, //resType=null 
         data,
-        function(res) {
+        (res) => {
             callback(res)
         }
     );
@@ -156,7 +156,7 @@ function post_review_endpoint(method, repo_url, endpoint, auth,
         headers,
         null, //resType=null 
         data,
-        function(res) {
+        (res) => {
             callback(res)
         }
     );
@@ -176,11 +176,12 @@ function get_req(repo_url, service, auth, callback) {
 
     repo_url = `${repo_url}/info/refs?service=${service}`
 
-    request("GET", repo_url, headers, function(res) {
+    request("GET", repo_url, headers, (res) => {
         if (res.statusCode !== 200) {
             throw new Error(
                 `HTTP Error: ${res.statusCode} ${res.statusMessage}`)
         }
+	// parse the response and then callback
         callback(parseGETResponse(res.body, service))
     })
 }
@@ -207,14 +208,12 @@ var post_req = async function(repo_url, service, auth, stream, callback) {
         "POST",
         repo_url,
         headers,
-        //null,
         "arraybuffer",
         conStream,
-        function(res) {
+        (res) => {
             if (res.statusCode !== 200) {
-                throw new Error(`HTTP Error: `) //${res.statusCode} ${res.statusMessage}`)
+                throw new Error(`HTTP Error: `)
             }
-
             //parse the response and then callback
             callback(res.body)
         }
@@ -255,7 +254,6 @@ var connect = async function({
             if (res.statusCode !== 200) {
                 throw new Error(`HTTP Error: `) //${res.statusCode} ${res.statusMessage}`)
             }
-
             // parse the response and then callback
             callback(res.body)
         }

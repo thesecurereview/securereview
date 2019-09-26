@@ -1,3 +1,29 @@
+// Push commit to the server
+function prepareCommit({
+    parents,
+    treeHash,
+    commitMessage
+}) {
+
+    //Generate timestamp at the client side and add it to author
+    let [timestamp, timezoneOffset] = determineTime();
+    AUTHOR["timestamp"] = timestamp;
+    AUTHOR["timezoneOffset"] = timezoneOffset;
+
+    // Create a new signed commit
+    createSignedCommit({
+        tree: treeHash,
+        parents,
+        author: AUTHOR,
+        message: commitMessage
+    }, (commit) => {
+        // Populate the pop up window, and make it readable only
+        document.getElementById(COMMITBOX_ID).value = commit;
+        document.getElementById(COMMITBOX_ID).readOnly = true;
+    });
+}
+
+
 // Create a sign commit object
 function createSignedCommit(commitInfo, callback) {
     let commit = formCommit(commitInfo);

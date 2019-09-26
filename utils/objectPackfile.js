@@ -301,14 +301,14 @@ var pushObjects = function({
             outputStream: packstream
         })
 
-        /*/ POST the packfile
+        // POST the packfile
         connect({
             service: RECEIVEPACK,
             repo_url,
             auth,
             stream: packstream
-        }, function(result) {
+        }, (result) => {
             callback(result)
-        })*/
+        })
     })
 }
