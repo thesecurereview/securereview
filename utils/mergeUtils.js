@@ -121,7 +121,6 @@ function mergeBottomTree ({
 	let fpath, fname, parent;
 	let newdirs = [];
 	let objects = [];
-
 	//TODO: update this code using updateBlobEntry in ./objectUtils
 	// Delete blobs
 	if (deleted_files.length > 0){
@@ -171,8 +170,7 @@ function mergeBottomTree ({
 			let type = "blob"
 			let content = blobs[fpath][parents.changeHead]
 			objects.push([type, createGitObject(type, content).object])
-		}
-		 
+		}	 
 	}
 
 	// Merge blobs
@@ -194,8 +192,8 @@ function mergeBottomTree ({
 			objects.push(["blob", blobs[fpath].object])
 		}
 	}
-
-	return {master_trees, newdirs, newObjects:objects};
+//console.log(master_trees)
+	//return {master_trees, newdirs, newObjects:objects};
 }
 
 

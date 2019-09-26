@@ -23,49 +23,6 @@ packLineEncode = function (line) {
 }
 
 
-packLineReader = function (buffer) {
-
-	let buffercursor = new BufferCursor(buffer)
-
-	return async function read () {
-		if (buffercursor.eof()) return true
-
-		let length = parseInt(buffercursor.slice(4).toString('utf8'), 16)
-
-		if (length === 0) return null
-
-		return buffercursor.slice(length - 4).buffer
-	}
-}
-
-
-packLineStreamReader = function (stream) {
-
-	const bufferstream = streamSource(stream)
-	try {
-		bufferstream.slice(4).then(length => {
-
-			console.log(length);
-			if (length === null) return true
-			length = parseInt(length.toString('utf8'), 16)
-			if (length === 0) return null
-
-			bufferstream.slice(length - 4).then(buffer => {
-
-				console.log(buffer);
-				if (buffer === null) return true
-				return buffer
-			});
-		});
-
-	} catch (err) {
-		console.log('error', err)
-		return true
-	}
-
-}
-
-
 }).call(this,require("buffer").Buffer)
 },{"buffer":19,"buffercursor":3,"pad":8,"stream-source":10}],2:[function(require,module,exports){
 (function (Buffer,process){

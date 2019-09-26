@@ -46,8 +46,8 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                 parser: blobParser
             }, ({
                 data
-            }) => {console.log(data)
-                /*/TODO:Merge modified blobs in advance
+            }) => {
+                //TODO:Merge modified blobs in advance
 
                 // Update the bottom tree
                 let {
@@ -64,7 +64,7 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
                     pr_trees: ptrees
                 });
 
-                // Remove newdirs before starting propagateUpdate process
+                /*/ Remove newdirs before starting propagateUpdate process
                 // as they are already added during mergeBottomTree process
                 changed_dirs = arrayDifference(changed_dirs, newdirs);
 
