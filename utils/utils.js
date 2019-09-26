@@ -18,9 +18,9 @@ const authUsername = 'admin'
 const authPassword = "secret"
 const authEmail = 'hammad.afzali@gmail.com'
 const GERRIT_MAGIC_JSON_PREFIX = ")]}\'\n"
-    //var authPassword = "UfkRENHIoRquwpgbvftB+9R0knqV3+C3iYQUyw/Vbw" //hmd
-    //var authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw" //Laptop
-    //var authPassword = "mAwEx0wcFOYz4yIzA9agMC8mRmIVWvV+HTAyvA66pQ" //"secret"
+const PGP_SIG = "gpgsig";
+const PGP_START = "-----BEGIN PGP SIGNATURE-----";
+const PGP_END = "-----END PGP SIGNATURE-----";
 
 /*
 https://unix.stackexchange.com/questions/450480/file-permission-with-six-bytes-in-git-what-does-it-mean
