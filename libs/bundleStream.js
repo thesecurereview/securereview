@@ -20,35 +20,14 @@ window.getPakoInflate = function (){
 	return new pako.Inflate()
 }
 
-window.getCRC32 = function (){
-	return crc32
-}
-
 window.getSha1 = function (){
 	return createHash ('sha1')
-}
-
-window.getSimpleGet = function (){
-	return simpleGet
-}
-
-window.getStreamConcat = function (stream){
-	return 	streamConcat (stream, (err, data) => {
-		if (err) console.log(err)
-		else console.log("call simple-concat:", data)
-	})
 }
 
 window.getStream = function (){
 	var packstream = new stream.PassThrough()
 	return packstream
 }
-
-window.getBufferCursor = function (buffer) {
-	var BufferCursor = new buffercursor.BufferCursor()
-	return BufferCursor
-}
-
 
 
 },{"buffercursor":3,"crc-32":6,"pad":11,"pako":12,"sha.js":30,"simple-concat":37,"simple-get":38,"stream":75}],2:[function(require,module,exports){

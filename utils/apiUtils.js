@@ -40,9 +40,10 @@ function formBlobUrls(project, parents,
 
     // If targetHead and caHead are not the same, fetch files for caHead
     let caRefs = []
-    if (parents.hasOwnProperty("caHead"))
+    if (parents["caHead"] !== undefined)
         caRefs = blobUrls(project, parents.caHead,
-            modified_files)
+            modified_files);
+
     let targetRefs = blobUrls(project, parents.targetHead,
         modified_files)
     let changeRefs = blobUrls(project, parents.changeHead, [...added_files, ...modified_files])
@@ -55,7 +56,7 @@ function formBlobUrls(project, parents,
 function blobUrls(project, head, files) {
 
     let endpoint = `projects/${project}/commits`
-    endpoint = `${HOST_ADDR}/${endpoint}/${head}/files/`
+    endpoint = `${HOST_ADDR}/${endpoint}/${head}/files`
 
     let urls = [];
     for (f in files) {
@@ -175,3 +176,52 @@ function modeConversion(entries) {
 
     return trees;
 }
+
+
+//Form parents
+function formParents(changeInfo, caInfo, targetInfo){
+	// Form heads, Ignore caHead if it's the same as targetHead
+	var parents = {
+		changeHead: changeInfo.current_revision,
+		targetHead: targetInfo.commit
+	};
+	//TODO: what if there is no CA
+	var caHead = caInfo.parents[0].commit
+	if (parents.targetHead !== caHead)
+		parents["caHead"] = caHead
+
+	return ({ parents })
+}
+
+
+
+//Form Trees
+function formTrees(objects){
+
+	let trees = {};
+
+	//Initialize root tree
+	//Otherwise, the merge algorithm will compalin later
+	trees[""] = {};
+
+	for (var i = 0; i < objects.length; i++) {
+		let path = objects[i].path;
+		let parent = getParentPath(path);
+		let entry = removeParentPath (path);
+
+		if(parent in trees == false){
+			trees[parent] = {}; 
+		}
+
+		// Replace the full path with entry name
+		objects[i].path = entry;
+		// Omit the first char of the tree mode
+		let mode = objects[i].mode;
+		objects[i].mode = mode == "040000"? "40000": mode;
+
+		trees[parent][entry] = objects[i];
+	}
+
+	return trees
+}
+

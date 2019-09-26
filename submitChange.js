@@ -1,3 +1,8 @@
+// TODO: Remove global variables
+// Cache objects and commitInfo temporarily
+var finalObjects = [];
+var commitInfo;
+
 /**
  * Submit merge request:
  *  - compare target and change branches
@@ -11,9 +16,12 @@ function run(url) {
     var cn = getChangeNumber(url)
     // Get a summary of change
     getChangeSummary(cn, (result) => {
-        var project = result.project
-        var branch = result.branch
-        var change_id = result.change_id
+	// Cache some info to use later
+	commitInfo = result;
+
+        var project = result.project;
+        var branch = result.branch;
+        var change_id = result.change_id;
         //var changeNumber = result._number
 
         //TODO: sync the following API calls
@@ -50,25 +58,20 @@ function run(url) {
                     // Run the merge process
                     runMergeProcess(change_id, project, parents,
                         (treeHash, objects) => {
-                            //new objects
-                            objects = [...objects, ...commitObjects]
-                            //remove ca from parents
+                            //Update new objects
+                            finalObjects = [...objects, ...commitObjects]
+                            //Form parents to create commit
                             parents = [parents.targetHead, parents.changeHead]
+                            commitInfo["parents"] = parents;
 
                             //TODO: Form a better commit message 
-                            var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`
-                            /*pushCommit({ 
-                            	url, 
-                            	project, 
-                            	branch,
-                            	objects, 
+                            var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`;
+
+                            prepareCommit({ 
                             	parents, 
                             	treeHash, 
-                            	commitMessage}, 
-                            ({ result }) => {
-                            	var t1 = performance.now();
-                            	console.log(result)
-                            });*/
+                            	commitMessage
+                            });
                         });
                 });
 
@@ -77,6 +80,34 @@ function run(url) {
         });
 
     });
+}
+
+
+function pushCommit() {
+
+    // Create final Git commit object
+    let commit = document.getElementById(COMMITBOX_ID).value;
+    let type = "commit";
+    let obj = createGitObject(type, commit);
+    finalObjects.push([type, obj.object]);
+
+    let parents = commitInfo.parents
+    let repo_url = `${HOST_ADDR}/${commitInfo.project}`;
+
+    // Push the commit to the server
+    pushObjects({
+            auth,
+            repo_url,
+            branch: commitInfo.branch,
+            oldHead: parents[0],
+            newHead: obj.id,
+            objects:finalObjects
+        },
+        (result) => {
+            //TODO: Prase the response and take action
+            //parseSendPackResult (result)
+            console.log(result);
+        });
 }
 
 

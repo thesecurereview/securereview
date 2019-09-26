@@ -26,51 +26,6 @@ function setParentInfo(commit) {
 }
 
 
-//Form Trees
-function formTrees(objects){
-
-	let trees = {};
-
-	//Initialize root tree
-	//Otherwise, the merge algorithm will compalin later
-	trees[""] = {};
-
-	for (var i = 0; i < objects.length; i++) {
-		let path = objects[i].path;
-		let parent = getParentPath(path);
-		let entry = removeParentPath (path);
-
-		if(parent in trees == false){
-			trees[parent] = {}; 
-		}
-
-		// Replace the full path with entry name
-		objects[i].path = entry;
-		// Omit the first char of the tree mode
-		let mode = objects[i].mode;
-		objects[i].mode = mode == "040000"? "40000": mode;
-
-		trees[parent][entry] = objects[i];
-	}
-
-	return trees
-}
-
-/*########################################################*/
-function formParents(changeInfo, caInfo, targetInfo){
-	// Form heads, Ignore caHead if it's the same as targetHead
-	var parents = {
-		changeHead: changeInfo.current_revision,
-		targetHead: targetInfo.commit
-	};
-	//TODO: what if there is no CA
-	var caHead = caInfo.parents[0].commit
-	if (parents.targetHead !== caHead)
-		parents["caHead"] = caHead
-
-	return ({ parents })
-}
-
 
 function createRevisionCommits(revisions){
 	let objects = [];

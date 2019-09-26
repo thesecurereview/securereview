@@ -1,4 +1,4 @@
-/*/
+/*
 TODO: Take configs from user
 const SERVER_GH = "github.com";
 const SERVER_GL = "gitlab.com";
@@ -9,7 +9,6 @@ const API_GL = `https://api.${SERVER_GL}`;
 const RPACK = 'git-receive-pack'
 const UPACK = 'git-upload-pack'
 */
-
 const HOST_ADDR = "http://localhost:8080"
 const GET_URL = "http://hmd@localhost:8080"
 const PUT_URL = "http://hmd@localhost:8080/a"
@@ -19,9 +18,10 @@ const authUsername = 'admin'
 const authPassword = "secret"
 const authEmail = 'hammad.afzali@gmail.com'
 const GERRIT_MAGIC_JSON_PREFIX = ")]}\'\n"
-//var authPassword = "UfkRENHIoRquwpgbvftB+9R0knqV3+C3iYQUyw/Vbw" //hmd
-//var authPassword = "WfE1/G0cueMqZq+4l4mwf7wuUnwp/7YgVxYuOTqmrw" //Laptop
-//var authPassword = "mAwEx0wcFOYz4yIzA9agMC8mRmIVWvV+HTAyvA66pQ" //"secret"
+const PGP_SIG = "gpgsig";
+const PGP_START = "-----BEGIN PGP SIGNATURE-----";
+const PGP_END = "-----END PGP SIGNATURE-----";
+const COMMITBOX_ID = "commitBox";
 
 /*
 https://unix.stackexchange.com/questions/450480/file-permission-with-six-bytes-in-git-what-does-it-mean
@@ -56,7 +56,7 @@ var auth = {
     password: authPassword
 }
 
-var author = {
+var AUTHOR = {
     name: authUsername,
     email: authEmail
 }
@@ -69,10 +69,18 @@ function comparePath(a, b) {
 }
 
 
+// Compare two strings
 function compareStrings(a, b) {
     // https://stackoverflow.com/a/40355107/2168416
     return -(a < b) || +(a > b)
 }
+
+
+// Sort an array using a key (path)
+function sortByName(a, b) {
+    return compareStrings(a.name, b.name)
+}
+
 
 
 // Extract the parent path
@@ -118,7 +126,7 @@ function getCommonDirs(paths) {
     for (var i = 0; i < paths.length; i++) {
         //get intermediate paths
         var iPaths = getIntermediatePaths(paths[i])
-        // concat paths to the main list
+            // concat paths to the main list
         dirs = dirs.concat(iPaths);
     }
 
