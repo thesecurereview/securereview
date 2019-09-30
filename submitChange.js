@@ -91,7 +91,7 @@ function pushCommit() {
     let obj = createGitObject(type, commit);
     finalObjects.push([type, obj.object]);
 
-    let parents = commitInfo.parents
+    let parents = commitInfo.parents;
     let repo_url = `${HOST_ADDR}/${commitInfo.project}`;
 
     // Push the commit to the server

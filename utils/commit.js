@@ -3,7 +3,7 @@ function prepareCommit({
     parents,
     treeHash,
     commitMessage
-}) {
+}, callback) {
 
     //Generate timestamp at the client side and add it to author
     let [timestamp, timezoneOffset] = determineTime();
@@ -17,9 +17,14 @@ function prepareCommit({
         author: AUTHOR,
         message: commitMessage
     }, (commit) => {
-        // Populate the pop up window, and make it readable only
-        document.getElementById(COMMITBOX_ID).value = commit;
-        document.getElementById(COMMITBOX_ID).readOnly = true;
+        let commitBox = document.getElementById(COMMITBOX_ID);
+        if (commitBox) { //SubmitChange
+            // Populate the pop up window, and make it readable only
+            document.getElementById(COMMITBOX_ID).value = commit;
+            document.getElementById(COMMITBOX_ID).readOnly = true;
+        } else { //SignReview
+            callback(commit);
+        }
     });
 }
 

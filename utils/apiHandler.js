@@ -67,11 +67,11 @@ function getChangeSummary(cn, callback) {
     get_endpoint({
         endpoint,
         auth
-    }, function(result) {
+    }, (result) => {
         //In this case, jsonify returns an array of one element
         callback(jsonifyResponse({
             content: result
-        })[0])
+        })[0]);
     })
 }
 
@@ -83,10 +83,10 @@ function getRevisionCommit(change_id, revision, callback) {
     get_endpoint({
         endpoint,
         auth
-    }, function(result) {
+    }, (result) => {
         callback(jsonifyResponse({
             content: result
-        }))
+        }));
     })
 }
 
@@ -98,10 +98,10 @@ function getRevisionReview(change_id, revision, callback) {
     get_endpoint({
         endpoint,
         auth
-    }, function(result) {
+    }, (result) => {
         callback(jsonifyResponse({
             content: result
-        }))
+        }));
     })
 }
 
@@ -113,10 +113,10 @@ function getRevisionFiles(change_id, revision, callback) {
     get_endpoint({
         endpoint,
         auth
-    }, function(result) {
+    }, (result) => {
         callback(jsonifyResponse({
             content: result
-        }))
+        }));
     })
 }
 
@@ -128,10 +128,10 @@ function getCommitInfo(project, commitID, callback) {
     get_endpoint({
         endpoint,
         auth
-    }, function(result) {
+    }, (result) => {
         callback(jsonifyResponse({
             content: result
-        }))
+        }));
     });
 }
 
@@ -146,8 +146,27 @@ function getBranchHead(project, branch, callback) {
     }, function(result) {
         callback(jsonifyResponse({
             content: result
-        }))
-    })
+        }));
+    });
+}
+
+
+// Get tree content using gitiles plugin
+function getTreeContent({
+    project,
+    commitID,
+    dir
+}, callback) {
+
+    let endpoint = `${GET_URL}/plugins/gitiles/${project}/+/${commitID}/${dir}`;
+    get_endpoint({
+        endpoint,
+        auth
+    }, function(result) {
+        callback(jsonifyResponse({
+            content: result
+        }));
+    });
 }
 
 

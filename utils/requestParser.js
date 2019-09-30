@@ -12,10 +12,9 @@ function jsonifyResponse({
     let idx = content.lastIndexOf("\n");
     content = content.substr(0, idx);
 
-    if (json == false)
-        return content;
+    if (json == false) return content;
 
-    return JSON.parse(content)
+    return JSON.parse(content);
 }
 
 

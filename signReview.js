@@ -37,7 +37,7 @@ function setReview(change_id, head, data) {
         data,
         method: "POST",
         endpoint: `${PUT_URL}/${endpoint}`,
-	contentType: `application/json;charset=UTF-8`
+        contentType: `application/json;charset=UTF-8`
     }, (result) => {
         /*/TODO: Take the right action based on the result
         parseMSGResponse({
@@ -56,15 +56,15 @@ function amendChangeBranch({
 }) {
 
     /**
-    * NOTE: since we append the commit message,
-    * we should be careful about the commit message size 
-    * However, the length field of the commit message is size_t
-    * https://github.com/git/git/blob/master/strbuf.h
-    * which means the maximum length is an upper bound at
-    * the maximum value of size_t on your platform of choice
-    * Implementations in other language than C may have their own limitaitons
-    * For example JGit has a ~5MB max size for the commit message
-    */
+     * NOTE: since we append the commit message,
+     * we should be careful about the commit message size 
+     * However, the length field of the commit message is size_t
+     * https://github.com/git/git/blob/master/strbuf.h
+     * which means the maximum length is an upper bound at
+     * the maximum value of size_t on your platform of choice
+     * Implementations in other language than C may have their own limitaitons
+     * For example JGit has a ~5MB max size for the commit message
+     */
 
     // Update the commit message
     let endpoint = `changes/${change_id}/edit:message`;
@@ -128,26 +128,66 @@ function run() {
             // Extract the review info
             let review = captureReview();
 
+            let commitMessage = commitInfo.message;
+
             // Store signed review in the change branch
             signReviewUnit({
                 change_id,
                 review,
-                commitMessage: commitInfo.message
+                commitMessage,
             }, (result) => {
-                /* How to update the change branch
-                 * 1- Update the change branch by pushing a new signed commit
-                 * 2- Update the commit message of change branch using API
-                 * 3- Keep the previous scores
-                 */
+                /**
+                * How to update the change branch:
+                * Approach1: 
+		*	- Update the change branch by pushing a new signed commit
+                * 	- Create a new patch set to embed signed reviews in the commit message
+                * Approach2:
+		*	- Update the commit message of change branch using API
+		*/
 
-                /*/ 1st approach complains about missing objects
-                let oldHead = parents[0];
-                getTreeHash (project, parents, function(treeHash){
-                	 pushCommit({ project, changeNumber, //branch, objects,
-                		parents, treeHash, commitMessage })
-                });*/
+		/*
+                getTreeContent({
+                    project,
+                    commitID: parents[0],
+                    dir: ""
+                }, (data) => {console.log(data)
 
-                // 2nd approach works for now
+                    //Prepare the new commit
+                    prepareCommit({
+                        parents,
+                        treeHash: data.id,
+                        commitMessage
+                    }, (commit) => {
+                        console.log(commit);
+
+                        // Create the new commit (amend review to commit message)
+                        let objects = [];
+                        let type = "commit";
+                        let obj = createGitObject(type, commit);
+                        objects.push([type, obj.object]);
+
+                        let repo_url = `${HOST_ADDR}/${project}`;
+                        // Push the commit to the server
+		    	pushObjects({
+			    auth,
+			    repo_url,
+			    branch,
+			    oldHead: parents[0],
+			    newHead: obj.id,
+			    objects
+			},
+			(result) => {
+			    //TODO: Prase the response and take action
+			    //parseSendPackResult (result)
+			    console.log(result);
+			});
+
+                    });
+
+                });
+		*/
+
+                // Update the commit message of change branch using API
                 amendChangeBranch({
                     change_id,
                     review,
