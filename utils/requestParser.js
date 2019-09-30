@@ -174,7 +174,7 @@ function parsePackfileResponse(data) {
 
 
 // Parse response
-function parseMSGResponse(method, res) {
+function parseMSGResponse({method, res}) {
 
     if (method == "PUT") {
         // Check for 204 No Content success code
