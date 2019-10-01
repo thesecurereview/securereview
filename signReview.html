@@ -1,143 +1,133 @@
 <!DOCTYPE html>
 <html>
-	<head>
-    		<script src='./signReview.js'></script>
-    		<script src='./keyManagement.js'></script>
-
-		<script src='./utils/requestHandler.js'></script>
-		<script src='./utils/requestParser.js'></script>
-		<script src='./utils/apiHandler.js'></script>
-		<script src='./utils/pushCommit.js'></script>	
-		<script src='./utils/objectCreate.js'></script>
-		<script src='./utils/objectPackfile.js'></script>
-		<script src='./utils/objectParser.js'></script>
-		<script src='./utils/objectUtils.js'></script>
-		<script src='./utils/utils.js'></script>
-		<script src='./utils/packfileParser.js'></script>
-		<script src='./utils/packfileReader.js'></script>
-		<script src='./utils/streamReader.js'></script>
-		<script src='./utils/reviewHandler.js'></script>
-		<script src='./utils/pageRefresh.js'></script>
-
-		<script src='./libs/bundleStream.js'></script>
-		<script src='./libs/bundlePackLine.js'></script>
-		<script src='./libs/bundleObject.js'></script>
-		<script src="./libs/openpgp.js"></script>
-		<script src="./libs/sha1.js"></script>
-
-		<meta charset="utf-8">
-		<!--link rel="stylesheet" href="css/popup.css">
-		<link rel="stylesheet" href="css/sitewide-css.css">
-		<link rel="stylesheet" href="css/bootstrap/css/bootstrap.css"-->
-		<title>SafeReview</title>
-
-		<style>
-			.gwt-TextArea {
-			  padding: 2px;
-			}
-
-			.gwt-RadioButton {
-			}
-			.gwt-RadioButton-disabled {
-			  color: #888;
-			}
-			.gwt-Button {
-			  margin: 0;
-			  padding: 3px 5px;
-			  text-decoration: none;
-			  font-size: small;
-			  cursor: pointer;
-			  cursor: hand;
-			  background: url("images/hborder.png") repeat-x 0px -27px;
-			  border: 1px outset #ccc;
-			}
-
-			.com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name input{
-			  margin-left : 0;
-			}
-			.com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name{
-			  font-weight : bold;
-			  text-align : left;
-			  white-space : nowrap;
-			}
-
-			.com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value {
-			  text-align : center;
-			}
-
-		</style>
-	</head>
-
-	<body>
-		<div id="popup">
-			<div class="form-group">
-				<label id="title-bar" class="control-label" for="parent_info" >Comments</label>
-				<div class="col-md-4">                     
-					<textarea class="form-control" style="width: 510px; height: 100px;" id="comments" name="comments" spellcheck="false" placeholder="Say something nice..." rows="4" max-rows="15" aria-disabled="false"></textarea>
-					<br>
-				</div>
-
-				<!--label id="title-bar" class="control-label" for="new_changes" >Changes</label-->
-				<br>
-
-				<!--div class="col-md-4">                     
-				<label id="title-bar" class="control-label" for="commit-msg" >Code Review</label>
-
-<iron-selector class="style-scope gr-reply-dialog" data-label="Code-Review">	      
-	<button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value="-2" title="This shall not be merged">-2</gr-button>
-
-	<button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value="-1" title="I would prefer this is not merged as is">-1</gr-button>
-
-	<button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value=" 0" title="No score"> 0</gr-button>
-
-	<button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value="+1" title="Looks good to me, but someone else must approve">+1</gr-button>
-
-	<button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0 iron-selected" role="button" tabindex="0" data-value="+2" title="Looks good to me, approved">+2</gr-button>
-</iron-selector>
-				</div-->
-				<div class="com-google-gerrit-client-change-Resources-Style-section"> 
-				<table>
-				<colgroup><col><col><col><col><col><col><col></colgroup>
-				<tbody>
-					<tr>
-					<td>&nbsp;</td>
-					<td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">-2</td>
-					<td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">-1</td>
-					<td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value"> 0</td>
-					<td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">+1</td>
-					<td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">+2</td>
-					<td>&nbsp;</td>
-					</tr>
-
-					<tr>
-					<td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name">Code-Review</td>
-					<!--td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="on" id="gwt-uid-132" tabindex="0"><label for="gwt-uid-132"></label></span></td-->
-					<td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="-2" id="gwt-uid-132" tabindex="0"><label for="gwt-uid-132"></label></span></td>
-					<td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="-1" id="gwt-uid-133" tabindex="0"><label for="gwt-uid-133"></label></span></td>
-					<td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="0" id="gwt-uid-134" tabindex="0" checked=""><label for="gwt-uid-134"></label></span></td>
-					<td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="+1" id="gwt-uid-135" tabindex="0"><label for="gwt-uid-135"></label></span></td>
-					<td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="+2" id="gwt-uid-136" tabindex="0"><label for="gwt-uid-136"></label></span></td>
-					<!--td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_help"><No score></td-->
-					</tr>
-				</tbody>
-				</table>
-				</div>
-
-
-				<br>
-
-				<div>
-				<button id='publish_review'><b>Post</b></button>
-				</div>
-
-				<div class="form-group" style="text-align: right;clear:left;">
-					<a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
-					<a class="btn btn-primary btn-sm"  href="keyManagement.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
-				</div>
-			</div>
-		</div>
-	</body>
+   <head>
+      <script src='./signReview.js'></script>
+      <script src='./keyManagement.js'></script>
+      <script src='./utils/commit.js'></script>
+      <script src='./utils/commitUtils.js'></script>
+      <script src='./utils/requestHandler.js'></script>
+      <script src='./utils/requestParser.js'></script>
+      <script src='./utils/apiHandler.js'></script>
+      <script src='./utils/objectCreate.js'></script>
+      <script src='./utils/objectPackfile.js'></script>
+      <script src='./utils/objectParser.js'></script>
+      <script src='./utils/objectUtils.js'></script>
+      <script src='./utils/utils.js'></script>
+      <script src='./utils/packfileParser.js'></script>
+      <script src='./utils/packfileReader.js'></script>
+      <script src='./utils/streamReader.js'></script>
+      <script src='./utils/reviewHandler.js'></script>
+      <script src='./utils/pageRefresh.js'></script>
+      <script src='./libs/bundleStream.js'></script>
+      <script src='./libs/bundlePackLine.js'></script>
+      <script src='./libs/bundleObject.js'></script>
+      <script src="./libs/openpgp.js"></script>
+      <script src="./libs/sha1.js"></script>
+      <meta charset="utf-8">
+      <!--link rel="stylesheet" href="css/popup.css">
+         <link rel="stylesheet" href="css/sitewide-css.css">
+         <link rel="stylesheet" href="css/bootstrap/css/bootstrap.css"-->
+      <title>SafeReview</title>
+      <style>
+         .gwt-TextArea {
+         padding: 2px;
+         }
+         .gwt-RadioButton {
+         }
+         .gwt-RadioButton-disabled {
+         color: #888;
+         }
+         .gwt-Button {
+         margin: 0;
+         padding: 3px 5px;
+         text-decoration: none;
+         font-size: small;
+         cursor: pointer;
+         cursor: hand;
+         background: url("images/hborder.png") repeat-x 0px -27px;
+         border: 1px outset #ccc;
+         }
+         .com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name input{
+         margin-left : 0;
+         }
+         .com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name{
+         font-weight : bold;
+         text-align : left;
+         white-space : nowrap;
+         }
+         .com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value {
+         text-align : center;
+         }
+      </style>
+   </head>
+   <body>
+      <div id="popup">
+         <div class="form-group">
+            <label id="title-bar" class="control-label" for="parent_info" >Comments</label>
+            <div class="col-md-4">                     
+               <textarea class="form-control" style="width: 510px; height: 100px;" id="comments" name="comments" spellcheck="false" placeholder="Say something nice..." rows="4" max-rows="15" aria-disabled="false"></textarea>
+               <br>
+            </div>
+            <!--label id="title-bar" class="control-label" for="new_changes" >Changes</label-->
+            <br>
+            <!--div class="col-md-4">                     
+               <label id="title-bar" class="control-label" for="commit-msg" >Code Review</label>
+               
+               <iron-selector class="style-scope gr-reply-dialog" data-label="Code-Review">	      
+               <button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value="-2" title="This shall not be merged">-2</gr-button>
+               
+               <button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value="-1" title="I would prefer this is not merged as is">-1</gr-button>
+               
+               <button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value=" 0" title="No score"> 0</gr-button>
+               
+               <button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0" role="button" tabindex="0" data-value="+1" title="Looks good to me, but someone else must approve">+1</gr-button>
+               
+               <button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0 iron-selected" role="button" tabindex="0" data-value="+2" title="Looks good to me, approved">+2</gr-button>
+               </iron-selector>
+               </div-->
+            <div class="com-google-gerrit-client-change-Resources-Style-section">
+               <table>
+                  <colgroup>
+                     <col>
+                     <col>
+                     <col>
+                     <col>
+                     <col>
+                     <col>
+                     <col>
+                  </colgroup>
+                  <tbody>
+                     <tr>
+                        <td>&nbsp;</td>
+                        <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">-2</td>
+                        <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">-1</td>
+                        <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value"> 0</td>
+                        <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">+1</td>
+                        <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_value">+2</td>
+                        <td>&nbsp;</td>
+                     </tr>
+                     <tr>
+                        <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name">Code-Review</td>
+                        <!--td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="on" id="gwt-uid-132" tabindex="0"><label for="gwt-uid-132"></label></span></td-->
+                        <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="-2" id="gwt-uid-132" tabindex="0"><label for="gwt-uid-132"></label></span></td>
+                        <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="-1" id="gwt-uid-133" tabindex="0"><label for="gwt-uid-133"></label></span></td>
+                        <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="0" id="gwt-uid-134" tabindex="0" checked=""><label for="gwt-uid-134"></label></span></td>
+                        <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="+1" id="gwt-uid-135" tabindex="0"><label for="gwt-uid-135"></label></span></td>
+                        <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="+2" id="gwt-uid-136" tabindex="0"><label for="gwt-uid-136"></label></span></td>
+                        <!--td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_help"><No score></td-->
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+            <br>
+            <div>
+               <button id='publish_review'><b>Post</b></button>
+            </div>
+            <div class="form-group" style="text-align: right;clear:left;">
+               <a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
+               <a class="btn btn-primary btn-sm"  href="keyManagement.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
+            </div>
+         </div>
+      </div>
+   </body>
 </html>
-
-
-

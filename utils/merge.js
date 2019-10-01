@@ -11,7 +11,7 @@ var runMergeProcess = async function(change_id, project, parents, callback) {
 
     let changeHead = parents.changeHead
     // Get the status of changed files in the change branch
-    getRevisionFiles(change_id, changeHead, function(result) {
+    getRevisionFiles(change_id, changeHead, (result) => {
 
         // Differentiate files between change and base branches
         var [added_files, deleted_files, modified_files] =

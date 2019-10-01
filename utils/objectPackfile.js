@@ -25,9 +25,9 @@ function fetchPackLine({
     for (const oid of wants) {
         let packLine = `want ${oid}${caps}\n`
         packstream.write(
-                packLineEncode(packLine)
-            )
-            //caps go only with the first line
+            packLineEncode(packLine)
+        )
+        //caps go only with the first line
         caps = ''
     }
 
@@ -143,7 +143,7 @@ var fetchObjects = async function({
             service,
             auth,
             stream,
-            function(result) {
+            (result) => {
 
                 /*
                 //TODO: Parse the packfile header
@@ -199,9 +199,9 @@ var pushPackLine = async function({
         let lastFour, multibyte, length
 
         length = object.length
-            // part of the variable-length encoded number is encoded in bit 7
+        // part of the variable-length encoded number is encoded in bit 7
         multibyte = length > 0b1111 ? 0b10000000 : 0b0
-            // Last four bits of length is encoded in bits 3210
+        // Last four bits of length is encoded in bits 3210
         lastFour = length & 0b1111
         length = length >>> 4
 
@@ -267,7 +267,7 @@ var pushObjects = function({
     var service = RECEIVEPACK;
 
     // Run git-upload-pack process
-    get_req(repo_url, service, auth, function(httpResponse) {
+    get_req(repo_url, service, auth, (httpResponse) => {
 
         // TODO: use server's capabilities in a better way
         let {

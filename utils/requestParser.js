@@ -12,10 +12,9 @@ function jsonifyResponse({
     let idx = content.lastIndexOf("\n");
     content = content.substr(0, idx);
 
-    if (json == false)
-        return content;
+    if (json == false) return content;
 
-    return JSON.parse(content)
+    return JSON.parse(content);
 }
 
 
@@ -174,7 +173,7 @@ function parsePackfileResponse(data) {
 
 
 // Parse response
-function parseMSGResponse(method, res) {
+function parseMSGResponse({method, res}) {
 
     if (method == "PUT") {
         // Check for 204 No Content success code

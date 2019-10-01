@@ -22,6 +22,7 @@ const PGP_SIG = "gpgsig";
 const PGP_START = "-----BEGIN PGP SIGNATURE-----";
 const PGP_END = "-----END PGP SIGNATURE-----";
 const COMMITBOX_ID = "commitBox";
+const CHANGEID = "Change-Id:"
 
 /*
 https://unix.stackexchange.com/questions/450480/file-permission-with-six-bytes-in-git-what-does-it-mean

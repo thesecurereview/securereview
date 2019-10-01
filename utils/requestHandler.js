@@ -113,20 +113,26 @@ function get_endpoint({
 
 
 // PUT/POST request over an endpoint
-function post_endpoint(method, repo_url, endpoint, auth,
-    data, callback) {
+function post_endpoint({
+    auth,
+    data,
+    method,
+    endpoint,
+    contentType
+}, callback) {
 
     let headers = {}
     if (auth) {
         headers['Authorization'] = basicAuth(auth)
     }
-    headers['Accept'] = `application/json`
-
-    repo_url = `${repo_url}/${endpoint}`
+    if (contentType) {
+        headers['Content-Type'] = contentType;
+    }
+    headers['Accept'] = `application/json`;
 
     pifyRequest(
         method,
-        repo_url,
+        endpoint,
         headers,
         null, //resType=null 
         data,
@@ -134,33 +140,6 @@ function post_endpoint(method, repo_url, endpoint, auth,
             callback(res)
         }
     );
-
-}
-
-// PUT/POST request over an endpoint
-function post_review_endpoint(method, repo_url, endpoint, auth,
-    data, callback) {
-
-    let headers = {}
-    if (auth) {
-        headers['Authorization'] = basicAuth(auth)
-    }
-    headers['Accept'] = `application/json`
-    headers['Content-Type'] = `application/json;charset=UTF-8`
-
-    repo_url = `${repo_url}/${endpoint}`
-
-    pifyRequest(
-        method,
-        repo_url,
-        headers,
-        null, //resType=null 
-        data,
-        (res) => {
-            callback(res)
-        }
-    );
-
 }
 
 
