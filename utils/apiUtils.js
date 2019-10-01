@@ -1,7 +1,7 @@
 // Form urls for all trees need to be fetched
-// NOTE: We rely on the gitiles pluging to retrieve trees
 function formTreeUrls(project, parents, dirs) {
     /**
+     * NOTE: We rely on the gitiles pluging to retrieve trees
      * To create the merge commit, we need only trees of base and pr
      * No need to get the tree of common ancestor
      **/
@@ -224,4 +224,3 @@ function formTrees(objects){
 
 	return trees
 }
-

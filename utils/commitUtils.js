@@ -26,7 +26,7 @@ function setParentInfo(commit) {
 }
 
 
-
+// Create a revision commit
 function createRevisionCommits(revisions){
 	let objects = [];
 	let type = "commit";

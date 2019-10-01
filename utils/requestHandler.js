@@ -1,6 +1,6 @@
 //HTTPBasic
-//FIXME Add OAuth
 function basicAuth(auth) {
+    //FIXME Add OAuth
     return "Basic " + btoa(auth.username + ':' + auth.password)
 }
 
@@ -123,7 +123,7 @@ function post_endpoint({
 
     let headers = {}
     if (auth) {
-        headers['Authorization'] = basicAuth(auth)
+        headers['Authorization'] = basicAuth(auth);
     }
     if (contentType) {
         headers['Content-Type'] = contentType;
@@ -137,7 +137,7 @@ function post_endpoint({
         null, //resType=null 
         data,
         (res) => {
-            callback(res)
+            callback(res);
         }
     );
 }
@@ -150,10 +150,10 @@ function get_req(repo_url, service, auth, callback) {
 
     let headers = {}
     if (auth) {
-        headers['Authorization'] = basicAuth(auth)
+        headers['Authorization'] = basicAuth(auth);
     }
 
-    repo_url = `${repo_url}/info/refs?service=${service}`
+    repo_url = `${repo_url}/info/refs?service=${service}`;
 
     request("GET", repo_url, headers, (res) => {
         if (res.statusCode !== 200) {
@@ -161,7 +161,7 @@ function get_req(repo_url, service, auth, callback) {
                 `HTTP Error: ${res.statusCode} ${res.statusMessage}`)
         }
 	// parse the response and then callback
-        callback(parseGETResponse(res.body, service))
+        callback(parseGETResponse(res.body, service));
     })
 }
 

@@ -173,25 +173,25 @@ function parsePackfileResponse(data) {
 
 
 // Parse response
-function parseMSGResponse({method, res}) {
+function parseMSGResponse({method, result}) {
 
     if (method == "PUT") {
         // Check for 204 No Content success code
-        if (res.statusCode == 204) {
+        if (result.statusCode == 204) {
             return true
         }
         /*else
-        	//FIXME raise a better error
+        	//raise an error
         	return throw new Error(`The commit message is not updated`)
         */
     }
     if (method == "POST") {
-        // Check for 204 No Content success code
-        if (res.statusCode == 204) {
-            return refreshPage(url)
+        // Check for 200 and OK statusText
+        if (result.statusCode == 200) {
+            return refreshPage(url);
         }
         /*else
-        	//FIXME raise a better error
+        	//raise an error
         	return throw new Error(`The updated message is not published`)
         */
     }

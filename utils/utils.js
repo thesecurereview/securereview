@@ -1,14 +1,4 @@
-/*
-TODO: Take configs from user
-const SERVER_GH = "github.com";
-const SERVER_GL = "gitlab.com";
-const HOST_GH = `https://${SERVER_GH}`;
-const HOST_GL = `https://${SERVER_GL}`;
-const API_GH = `https://api.${SERVER_GH}`;
-const API_GL = `https://api.${SERVER_GL}`;
-const RPACK = 'git-receive-pack'
-const UPACK = 'git-upload-pack'
-*/
+// TODO: Take configs from the user
 const HOST_ADDR = "http://localhost:8080"
 const GET_URL = "http://hmd@localhost:8080"
 const PUT_URL = "http://hmd@localhost:8080/a"
@@ -16,33 +6,39 @@ const RECEIVEPACK = 'git-receive-pack'
 const UPLOADPACK = 'git-upload-pack'
 const authUsername = 'admin'
 const authPassword = "secret"
-const authEmail = 'hammad.afzali@gmail.com'
-const GERRIT_MAGIC_JSON_PREFIX = ")]}\'\n"
+const authEmail = 'myname@example.com'
 const PGP_SIG = "gpgsig";
 const PGP_START = "-----BEGIN PGP SIGNATURE-----";
 const PGP_END = "-----END PGP SIGNATURE-----";
+const GERRIT_MAGIC_JSON_PREFIX = ")]}\'\n"
 const COMMITBOX_ID = "commitBox";
-const CHANGEID = "Change-Id:"
+const CHANGEID = "Change-Id:";
+const EXTENSION_ID = "SafeReview";
 
-/*
-https://unix.stackexchange.com/questions/450480/file-permission-with-six-bytes-in-git-what-does-it-mean
-32-bit mode, split into (high to low bits)
-4-bit object type
-  valid values in binary are 1000 (regular file), 1010 (symbolic link)
-  and 1110 (gitlink)
-
-3-bit unused
-
-9-bit unix permission. Only 0755 and 0644 are valid for regular files.
-Symbolic links and gitlinks have value 0 in this field.
-
-Binary			Hex	Octal	Decimal
-1000 000 110100100	81A4	100644	33188	regular file
-1000 000 111101101	81ED	100755	33261	regular file
-1010 000 000000000	A000	120000	40960	symlink
-1110 000 000000000	E000	160000	57344	gitlink
-0100 000 000000000	4000	40000	16384	tree
-*/
+/**
+* Git file mode [1]:
+* 32-bit mode are defined as follows:
+* > 4-bit object type
+*   valid values in binary are:
+*	- 1000 (regular file)
+*	- 1010 (symbolic link)
+*   	- 1110 (gitlink)
+*
+* > 3-bit unused
+*
+* > 9-bit unix permission
+*	- Only 0755 and 0644 are valid for regular files.
+* 	- Symbolic links and gitlinks have value 0 in this field.
+*
+* Binary			Hex	Octal	Decimal
+* 1000 000 110100100	81A4	100644	33188	regular file
+* 1000 000 111101101	81ED	100755	33261	regular file
+* 1010 000 000000000	A000	120000	40960	symlink
+* 1110 000 000000000	E000	160000	57344	gitlink
+* 0100 000 000000000	4000	40000	16384	tree
+*
+* https://unix.stackexchange.com/questions/450480/file-permission-with-six-bytes-in-git-what-does-it-mean
+**/
 var FILEMODE = {
     "33188": "100644",
     "33261": "100755",
@@ -81,7 +77,6 @@ function compareStrings(a, b) {
 function sortByName(a, b) {
     return compareStrings(a.name, b.name)
 }
-
 
 
 // Extract the parent path
@@ -165,7 +160,6 @@ function extractBetween(str, prefix, suffix) {
     str = str.substring(str.indexOf(prefix) + prefix.length);
     return str.substring(0, str.indexOf(suffix));
 }
-
 
 
 // Eextract everything after last dilemma

@@ -39,11 +39,11 @@ function setReview(change_id, head, data) {
         endpoint: `${PUT_URL}/${endpoint}`,
         contentType: `application/json;charset=UTF-8`
     }, (result) => {
-        /*/TODO: Take the right action based on the result
+        //TODO: Take the right action based on the result
         parseMSGResponse({
-            method: "PUT",
+            method: "POST",
             result
-        });*/
+        });
     });
 }
 
