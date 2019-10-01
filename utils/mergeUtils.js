@@ -115,10 +115,13 @@ function mergeBottomTree({
     master_trees,
     pr_trees
 }) {
+    //FIXME: In case of merging a reverted merge, there is complain about missing blobs
+    //TODO: update part of the code using updateBlobEntry in ./objectUtils
+
     let fpath, fname, parent;
     let newdirs = [];
     let objects = [];
-    //TODO: update this code using updateBlobEntry in ./objectUtils
+
     // Delete blobs
     if (deleted_files.length > 0) {
         for (var i in deleted_files) {
