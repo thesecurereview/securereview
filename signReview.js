@@ -104,11 +104,10 @@ function amendChangeBranch({
 
 // Perform the signing review
 function run() {
-
     // Get change number
     let cn = getChangeNumber(url)
     getChangeSummary(cn, function(result) {
-
+//console.log(result)
         let project = result.project;
         let branch = result.branch;
         let change_id = result.change_id;
@@ -116,19 +115,17 @@ function run() {
 
         // Get the latest commit in the change branch
         getRevisionCommit(change_id, "current", (commitInfo) => {
-            //let targetBranch = result.branch
 
             // Get base commit in the base branch
             //let parents = extractParents(commitInfo);
+            //let oldHead = commitInfo.parents[0].commit;
+            let oldHead = commitInfo.commit;
 
-            //let oldHead = commitInfo.commit;
-            let parents = [];
-            parents.push(commitInfo.commit)
+            // Get the original commit message		
+            let commitMessage = commitInfo.message;
 
             // Extract the review info
             let review = captureReview();
-
-            let commitMessage = commitInfo.message;
 
             // Store signed review in the change branch
             signReviewUnit({
@@ -145,35 +142,61 @@ function run() {
 		*	- Update the commit message of change branch using API
 		*/
 
-		/*
+                // Get the tree hash
                 getTreeContent({
                     project,
-                    commitID: parents[0],
+                    commitID: oldHead,
                     dir: ""
-                }, (data) => {console.log(data)
-
-                    //Prepare the new commit
+                }, (data) => {
+                    //Prepare the new commit: Amending the pending branch
                     prepareCommit({
-                        parents,
+                        parents: [oldHead],
                         treeHash: data.id,
-                        commitMessage
+                        commitMessage: result
                     }, (commit) => {
-                        console.log(commit);
-
                         // Create the new commit (amend review to commit message)
-                        let objects = [];
                         let type = "commit";
                         let obj = createGitObject(type, commit);
-                        objects.push([type, obj.object]);
+                        let objects = [];
+			objects.push([type, obj.object]);
 
-                        let repo_url = `${HOST_ADDR}/${project}`;
+			/*
+			* To upload a patch set, clients must amend the tip of the pending branch as follows[1,2]:
+			* 	git commit --amend
+			* 	git push origin HEAD:refs/for/master
+			* The commit must be pushed to a ref in the refs/for/<target-branch> namespace
+			* The magic refs/for/ prefix allows Gerrit to differentiate commits that are pushed for review
+			* from commits that are pushed directly into the repository, bypassing code review.
+			*
+			* For an existing review to match, the following properties have to match [3]:
+			* 	Change-Id, Repository name, Branch name
+			* If a commit that has a Change-Id in its commit message is pushed for review,
+			* Gerrit checks if a change with this Change-Id already exists for this project and target branch,
+			* if yes, Gerrit creates a new patch set for this change. If not, a new change with the given Change-Id is created.
+			* If a commit without Change-Id is pushed for review, Gerrit creates a new change and generates a Change-Id for it.
+			* Amending/rebasing a commit preserves the Change-Id so that the new commit automatically
+			* becomes a new patch set of the existing change.
+			*
+			* From implementation point of view, we can replicate "git amend" by
+			* 	Deleting the previous head (push origin master --delete )
+			*	Pointing to the new pushed commit
+			* equiv.
+			* 	Reset to HEAD^
+			*	Push the new one
+			*
+			* [1] https://gerrit-review.googlesource.com/Documentation/intro-user.html#upload-patch-set
+			* [2] https://gerrit-review.googlesource.com/Documentation/intro-user.html#upload-change
+			* [3] https://gerrit-documentation.storage.googleapis.com/Documentation/2.14.7/user-changeid.html
+			*/
+
                         // Push the commit to the server
 		    	pushObjects({
 			    auth,
-			    repo_url,
 			    branch,
-			    oldHead: parents[0],
+			    oldHead,
 			    newHead: obj.id,
+			    ref: `refs/for/${branch}`,
+			    repo_url: `${HOST_ADDR}/${project}`,
 			    objects
 			},
 			(result) => {
@@ -181,21 +204,17 @@ function run() {
 			    //parseSendPackResult (result)
 			    console.log(result);
 			});
-
                     });
-
                 });
-		*/
 
-                // Update the commit message of change branch using API
+                /*/ Update the commit message of change branch using API
                 amendChangeBranch({
                     change_id,
                     review,
                     commitMessage: result
-                });
+                });*/
             })
         });
-
     });
 }
 

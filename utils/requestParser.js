@@ -20,7 +20,6 @@ function jsonifyResponse({
 
 // Parse GET response
 function parseGETResponse(data, service) {
-
     /*
     * response lines
     * 0: <Length># service=git-receive-pack"

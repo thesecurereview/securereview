@@ -254,10 +254,11 @@ var pushPackLine = async function({
 
 //Push Git objects to the server
 var pushObjects = function({
-    repo_url,
     auth,
     branch,
     changeNumber,
+    ref,	
+    repo_url,
     oldHead,
     newHead,
     objects
@@ -268,38 +269,36 @@ var pushObjects = function({
 
     // Run git-upload-pack process
     get_req(repo_url, service, auth, (httpResponse) => {
-
         // TODO: use server's capabilities in a better way
         let {
             capabilities,
             refs
-        } = httpResponse
+        } = httpResponse;
 
         // If no 'side-band' capability was specified, the server will stream the
         // entire packfile without multiplexing.
-        const caps = "report-status side-band-64k no-thin"
+        const caps = "report-status side-band-64k no-thin";
 
-        let ref;
-        if (branch == null) { //Update the change branch
+	if (typeof ref == 'undefined') {
             //FIXME: Form the change ref
-            ref = `refs/changes/01/1/2`
-            ref = `refs/heads/ref/changes/${changeNumber}`
-            ref = `refs/for/${changeNumber}`
-        } else
-            ref = `refs/heads/${branch}`
-
+            let ref = `refs/changes/01/1/2`;
+            ref = `refs/heads/ref/changes/${changeNumber}`;
+            ref = `HEAD:refs/for/${changeNumber}`;
+            ref = `refs/heads/${branch}`;
+	}
+	console.log(`${oldHead} ${newHead} ${ref}\0 ${caps}`)
         // Write header of the pack file
-        let packstream = getStream()
+        let packstream = getStream();
         packstream.write(
             packLineEncode(`${oldHead} ${newHead} ${ref}\0 ${caps}`)
-        )
-        packstream.write(packLineFlush())
+        );
+        packstream.write(packLineFlush());
 
         // Write objects into the packfile
         pushPackLine({
             objects,
             outputStream: packstream
-        })
+        });
 
         // POST the packfile
         connect({
@@ -309,6 +308,6 @@ var pushObjects = function({
             stream: packstream
         }, (result) => {
             callback(result);
-        })
-    })
+        });
+    });
 }
