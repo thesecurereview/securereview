@@ -75,7 +75,7 @@ function formRevisionUrls(change_id, revisions) {
     let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions`
 
     let urls = [];
-    for (let i = 1; i < revisions + 1; i++) {
+    for (let i = 1; i <= revisions; i++) {
         urls.push(`${endpoint}/${i}/commit`);
     }
 
