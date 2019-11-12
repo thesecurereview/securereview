@@ -55,3 +55,25 @@ function createRevisionCommits(revisions){
 
 	return objects;
 }
+
+
+function formCommitMessage(revisions) {
+    let commitMessage = "";
+    for (commit of revisions) {
+        let msg = commit.message;
+        let review = commit.message.slice(
+            msg.lastIndexOf("score"),
+            msg.lastIndexOf("Change-Id: I")
+        )
+        //Skip patchsets with no review
+        if (review.length > 0) {
+            //Trim  the review
+            review = review.substring(0, review.length - 2)
+            //Form the committer/reviewer
+            let committer = `committer ${commit.committer.name} <${commit.committer.email}> ${
+			commit.committer.timestamp} ${commit.committer.tz}\n`
+            commitMessage += `${review}\n${committer}\n`
+        }
+    }
+    return commitMessage;
+}

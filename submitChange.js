@@ -16,33 +16,39 @@ function run(url) {
     var cn = getChangeNumber(url)
     // Get a summary of change
     getChangeSummary(cn, (result) => {
-	// Cache some info to use later
-	commitInfo = result;
+        // Cache some info to use later
+        commitInfo = result;
 
-        var project = result.project;
-        var branch = result.branch;
-        var change_id = result.change_id;
-        //var changeNumber = result._number
+        let project = result.project;
+        let branch = result.branch;
+        let change_id = result.change_id;
+        let changeNumber = result._number
 
         //TODO: sync the following API calls
         // Get info: change branch
         getRevisionReview(change_id, "current", (changeInfo) => {
-
             //Get the number of patches in the change branch
             revisions = getObjetValues(changeInfo.revisions)[0]._number;
 
             //Get commits in the change branch
             let urls = formRevisionUrls(change_id, revisions);
-
             multiFetch({
                 urls,
                 parser: revisionParser
             }, ({
                 data
             }) => {
+                // Form Commit objects in the change branch
+                // All new commits should be part of the packfile
+                let revCommits = getObjetValues(data)
+                let commitObjects = createRevisionCommits(revCommits);
 
-                //Commit objects in change branch should be as part of the packfile
-                let commitObjects = createRevisionCommits(getObjetValues(data));
+                //ExtractReviews from the commit message
+                let commitMessage = formCommitMessage(revCommits);
+                //Amend change ID to the commit message
+                commitMessage = `Merge #${changeNumber}: ${
+			commitInfo.subject}\n\n${
+			commitMessage}Change-Id: ${change_id}`;
 
                 // Get info about the target branch
                 getBranchInfo(project, branch, (targetInfo) => {
@@ -64,13 +70,10 @@ function run(url) {
                             parents = [parents.targetHead, parents.changeHead]
                             commitInfo["parents"] = parents;
 
-                            //TODO: Form a better commit message 
-                            var commitMessage = `Merge change ${cn}\n\nChange-Id: ${change_id}`;
-
-                            prepareCommit({ 
-                            	parents, 
-                            	treeHash, 
-                            	commitMessage
+                            prepareCommit({
+                                parents,
+                                treeHash,
+                                commitMessage
                             });
                         });
                 });
@@ -81,7 +84,6 @@ function run(url) {
 
     });
 }
-
 
 function pushCommit() {
 
