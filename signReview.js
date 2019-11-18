@@ -107,7 +107,6 @@ function run() {
     // Get change number
     let cn = getChangeNumber(url)
     getChangeSummary(cn, function(result) {
-//console.log(result)
         let project = result.project;
         let branch = result.branch;
         let change_id = result.change_id;
@@ -115,11 +114,6 @@ function run() {
 
         // Get the latest commit in the change branch
         getRevisionCommit(change_id, "current", (commitInfo) => {
-
-            // Get base commit in the base branch
-            //let parents = extractParents(commitInfo);
-            //let oldHead = commitInfo.parents[0].commit;
-            let oldHead = commitInfo.commit;
 
             // Get the original commit message		
             let commitMessage = commitInfo.message;
@@ -132,7 +126,7 @@ function run() {
                 change_id,
                 review,
                 commitMessage,
-            }, (result) => {
+            }, (reviewUnit) => {
                 /**
                 * How to update the change branch:
                 * Approach1: 
@@ -142,17 +136,18 @@ function run() {
 		*	- Update the commit message of change branch using API
 		*/
 
+		// Approach1: Sign each commit
                 // Get the tree hash
                 getTreeContent({
                     project,
-                    commitID: oldHead,
+                    commitID: commitInfo.commit,
                     dir: ""
                 }, (data) => {
                     //Prepare the new commit: Amending the pending branch
                     prepareCommit({
-                        parents: [oldHead],
+                        parents: [commitInfo.parents[0].commit],
                         treeHash: data.id,
-                        commitMessage: result
+                        commitMessage: reviewUnit
                     }, (commit) => {
                         // Create the new commit (amend review to commit message)
                         let type = "commit";
@@ -161,39 +156,44 @@ function run() {
 			objects.push([type, obj.object]);
 
 			/*
-			* To upload a patch set, clients must amend the tip of the pending branch as follows[1,2]:
+			* To upload a patch set, clients must amend the tip of the pending branch 
+			* as follows[1,2]:
 			* 	git commit --amend
 			* 	git push origin HEAD:refs/for/master
 			* The commit must be pushed to a ref in the refs/for/<target-branch> namespace
-			* The magic refs/for/ prefix allows Gerrit to differentiate commits that are pushed for review
+			* The magic refs/for/ prefix allows Gerrit to 
+			* differentiate commits that are pushed for review
 			* from commits that are pushed directly into the repository, bypassing code review.
 			*
 			* For an existing review to match, the following properties have to match [3]:
 			* 	Change-Id, Repository name, Branch name
 			* If a commit that has a Change-Id in its commit message is pushed for review,
-			* Gerrit checks if a change with this Change-Id already exists for this project and target branch,
-			* if yes, Gerrit creates a new patch set for this change. If not, a new change with the given Change-Id is created.
-			* If a commit without Change-Id is pushed for review, Gerrit creates a new change and generates a Change-Id for it.
-			* Amending/rebasing a commit preserves the Change-Id so that the new commit automatically
-			* becomes a new patch set of the existing change.
-			*
-			* From implementation point of view, we can replicate "git amend" by
-			* 	Deleting the previous head (push origin master --delete )
-			*	Pointing to the new pushed commit
-			* equiv.
-			* 	Reset to HEAD^
-			*	Push the new one
+			* Gerrit checks if a change with this Change-Id already exists 
+			* for this project and target branch, if yes, 
+			* Gerrit creates a new patch set for this change. 
+			* If not, a new change with the given Change-Id is created.
+			* If a commit without Change-Id is pushed for review, 
+			* Gerrit creates a new change and generates a Change-Id for it.
+			* Amending/rebasing a commit preserves the Change-Id so that
+			* the new commit automatically becomes a new patch set of the existing change.
 			*
 			* [1] https://gerrit-review.googlesource.com/Documentation/intro-user.html#upload-patch-set
 			* [2] https://gerrit-review.googlesource.com/Documentation/intro-user.html#upload-change
 			* [3] https://gerrit-documentation.storage.googleapis.com/Documentation/2.14.7/user-changeid.html
+
+			* We re-implementating Gerrit patch set upload in the browser by
+			* 1) create a new commit in which the parent is the common ancestor 
+			* between the new change and the target branch (or the parent of first patch set).
+			* 2) create a packfile in which the oldHead value is all '0’s. 
+			* That means that nothing was there before, because 
+			* we are creating a new patch set which is a new reference.
 			*/
 
-                        // Push the commit to the server
+                        //Push the commit to the server
 		    	pushObjects({
 			    auth,
 			    branch,
-			    oldHead,
+			    oldHead:"0000000000000000000000000000000000000000",
 			    newHead: obj.id,
 			    ref: `refs/for/${branch}`,
 			    repo_url: `${HOST_ADDR}/${project}`,
@@ -207,7 +207,7 @@ function run() {
                     });
                 });
 
-                /*/ Update the commit message of change branch using API
+		/* Approach2: Update the commit message of change branch using API
                 amendChangeBranch({
                     change_id,
                     review,

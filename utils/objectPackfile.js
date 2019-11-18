@@ -286,7 +286,7 @@ var pushObjects = function({
             ref = `HEAD:refs/for/${changeNumber}`;
             ref = `refs/heads/${branch}`;
 	}
-	console.log(`${oldHead} ${newHead} ${ref}\0 ${caps}`)
+
         // Write header of the pack file
         let packstream = getStream();
         packstream.write(
