@@ -76,7 +76,8 @@ function formGerritReview(change_id, reviewData) {
 function captureReview() {
 
     let comments = document.getElementById('comments').value;
-    let score = document.querySelector('input[name = "Code-Review"]:checked').value;
+    //let score = document.querySelector('input[name = "Code-Review"]:checked').value;
+    let rating = document.querySelector('input[name = "pull_request_review[event]"]:checked').value;
 
     return {
         comments: comments,

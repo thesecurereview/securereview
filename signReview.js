@@ -30,10 +30,23 @@ function signReviewUnit({
 // Perform the signing review
 function run() {
 
+    // Extract the review info
+    let review = captureReview();
+    console.log(review)
+    // Do the config per PR 
     preConfig(url, (urlInfo) => {
+
+        //Get the summary of PR
         getPRSummary({prId: urlInfo.prId}, (prInfo) =>{
-            console.log(prInfo)
-        })
+           
+            /*/ Store signed review in the change branch
+            signReviewUnit({
+                review,
+                commitMessage,
+            }, (reviewUnit) => {
+
+            })*/
+        });
     });
 
 
