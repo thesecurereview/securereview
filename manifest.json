@@ -6,7 +6,7 @@
 
 	"background": {
 		"persistent": false,
-		"scripts": ["signReview.js", "submitChange.js"]
+		"scripts": ["popup.js", "signReview.js", "submitChange.js"]
 	},
 
 	"permissions":[

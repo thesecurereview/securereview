@@ -1,53 +1,75 @@
-// Make a single api call
-singleAPICall = function(endpoint, callback) {
-    get_endpoint({
-        endpoint,
-        auth
-    }, function(result) {
-        callback(result, endpoint)
-    })
+//TODO: Show proper messages if request is not authorized!
+
+// Make a single API call
+var singleAPICall = function({
+    endpoint,
+    json
+}, callback) {
+    var request = new XMLHttpRequest();
+    request.onload = function() {
+        //jsonify the response unless users not ask
+        let response = json == false ? this.responseText :
+            JSON.parse(this.responseText);
+        callback({
+            endpoint,
+            response
+        });
+    };
+
+    request.open('get', endpoint, true);
+    if (SERVER == SERVER_GH)
+        request.setRequestHeader('Authorization', `token ${AUTH.token}`);
+        //request.setRequestHeader('Authorization', `Bearer ${AUTH.token}`)//GITLAB
+    request.send();
 }
 
-
 // Make multiple API calls 
-multipleAPICall = function(urls, callbackMulti) {
+var multipleAPICall = function({
+    urls,
+    json
+}, callbackMulti) {
     var data = {};
     for (var i = 0; i < urls.length; i++) {
-        var callback = function(response, endpoint) {
-            var size = 0;
+        var callback = ({
+            endpoint,
+            response
+        }) => {
             data[endpoint] = response;
-            //update the size of data
+            var size = 0;
             for (var index in data) {
                 if (data.hasOwnProperty(index))
                     size++;
             }
+
             if (size == urls.length) {
                 callbackMulti(data);
             }
         };
-
-        singleAPICall(urls[i], callback);
+        singleAPICall({
+            endpoint: urls[i],
+            json
+        }, callback);
     }
 }
 
 
-// Fetch multiple data at once
-var multiFetch = async function({
+// Fetch data from multiple endpoints at once
+var multiFetch = function({
     urls,
-    parser
+    parser,
+    json
 }, callback) {
-
     var data = {};
     if (urls.length < 1)
         callback({
             data
         });
 
-    mutliCallback = function(response) {
-        for (var item in response) {
+    var mutliCallback = function(res) {
+        for (var item in res) {
             parser({
                 item,
-                info: response[item],
+                info: res[item],
                 data
             });
         }
@@ -56,141 +78,23 @@ var multiFetch = async function({
         });
     };
 
-    multipleAPICall(urls, mutliCallback);
+    multipleAPICall({
+        urls,
+        json
+    }, mutliCallback);
 }
 
 
-// Get the summary of a change
-function getChangeSummary(cn, callback) {
-
-    let endpoint = `${HOST_ADDR}/changes/?q=change:${cn}`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, (result) => {
-        //In this case, jsonify returns an array of one element
-        callback(jsonifyResponse({
-            content: result
-        })[0]);
-    })
-}
-
-
-// Get the head of revision
-function getRevisionCommit(change_id, revision, callback) {
-
-    let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/commit`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, (result) => {
-        callback(jsonifyResponse({
-            content: result
-        }));
-    })
-}
-
-
-// Get reviews for a change
-function getRevisionReview(change_id, revision, callback) {
-
-    let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/review`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, (result) => {
-        callback(jsonifyResponse({
-            content: result
-        }));
-    })
-}
-
-
-// Get details about files changed under a revision
-function getRevisionFiles(change_id, revision, callback) {
-
-    let endpoint = `${HOST_ADDR}/changes/${change_id}/revisions/${revision}/files`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, (result) => {
-        callback(jsonifyResponse({
-            content: result
-        }));
-    })
-}
-
-
-// Get the info about a commit
-function getCommitInfo(project, commitID, callback) {
-
-    let endpoint = `${HOST_ADDR}/projects/${project}/commits/${commitID}`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, (result) => {
-        callback(jsonifyResponse({
-            content: result
-        }));
-    });
-}
-
-
-// Get the head of branch
-function getBranchHead(project, branch, callback) {
-
-    let endpoint = `${HOST_ADDR}/projects/${project}/branches/${branch}`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, function(result) {
-        callback(jsonifyResponse({
-            content: result
-        }));
-    });
-}
-
-
-// Get tree content using gitiles plugin
-function getTreeContent({
-    project,
-    commitID,
-    dir
+// Compare the head of a branch
+function getPRSummary({
+    prId
 }, callback) {
-
-    let endpoint = `${GET_URL}/plugins/gitiles/${project}/+/${commitID}/${dir}`;
-    get_endpoint({
-        endpoint,
-        auth
-    }, function(result) {
-        callback(jsonifyResponse({
-            content: result
-        }));
-    });
-}
-
-
-// Get the info about a branch
-function getBranchInfo(project, branch, callback) {
-
-    getBranchHead(project, branch, function(result) {
-        // Get the details of the base branch
-        getCommitInfo(project, result.revision, function(result) {
-            callback(result)
-        });
-    });
-}
-
-
-// Get all revisions for a change
-function getChangeRevisions(change_id, revisions, callback) {
-
-    let urls = formRevisionUrls(change_id, revisions);
-    multiFetch({
-        urls
+    let endpoint = `${REPO_API}/pulls/${prId}`;
+    singleAPICall({
+        endpoint
     }, ({
-        data
+        response
     }) => {
-        callback(data)
+        callback(response);
     });
 }

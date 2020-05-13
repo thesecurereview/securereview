@@ -1,20 +1,3 @@
-// TODO: Take configs from the user
-const HOST_ADDR = "http://localhost:8080"
-const GET_URL = "http://hmd@localhost:8080"
-const PUT_URL = "http://hmd@localhost:8080/a"
-const RECEIVEPACK = 'git-receive-pack'
-const UPLOADPACK = 'git-upload-pack'
-const authUsername = 'admin'
-const authPassword = "secret"
-const authEmail = 'myname@example.com'
-const PGP_SIG = "gpgsig";
-const PGP_START = "-----BEGIN PGP SIGNATURE-----";
-const PGP_END = "-----END PGP SIGNATURE-----";
-const GERRIT_MAGIC_JSON_PREFIX = ")]}\'\n"
-const COMMITBOX_ID = "commitBox";
-const CHANGEID = "Change-Id:";
-const EXTENSION_ID = "SafeReview";
-
 /**
 * Git file mode [1]:
 * 32-bit mode are defined as follows:
@@ -39,25 +22,6 @@ const EXTENSION_ID = "SafeReview";
 *
 * https://unix.stackexchange.com/questions/450480/file-permission-with-six-bytes-in-git-what-does-it-mean
 **/
-var FILEMODE = {
-    "33188": "100644",
-    "33261": "100755",
-    "40960": "120000",
-    "57344": "160000",
-    "16384": "40000"
-}
-
-
-var auth = {
-    username: authUsername,
-    password: authPassword
-}
-
-var AUTHOR = {
-    name: authUsername,
-    email: authEmail
-}
-
 
 // Sort an array using the path key
 function comparePath(a, b) {
@@ -278,4 +242,21 @@ var string_ArrayBuffer = function(str) {
             return str.charCodeAt(i)
         }).length
     }
+}
+
+
+// Message Handler
+function errorHandler({
+    msg,
+    err = false
+}) {
+    window.alert(msg);
+    if (err) {
+        //window.location.reload(true);
+        return -1;
+    }
+    /*else{
+    		window.close();
+    	}*/
+    //TODO: Add a better handler
 }

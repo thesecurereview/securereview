@@ -1,28 +1,6 @@
 <!DOCTYPE html>
 <html>
    <head>
-      <script src='./signReview.js'></script>
-      <script src='./keyManagement.js'></script>
-      <script src='./utils/commit.js'></script>
-      <script src='./utils/commitUtils.js'></script>
-      <script src='./utils/requestHandler.js'></script>
-      <script src='./utils/requestParser.js'></script>
-      <script src='./utils/apiHandler.js'></script>
-      <script src='./utils/objectCreate.js'></script>
-      <script src='./utils/objectPackfile.js'></script>
-      <script src='./utils/objectParser.js'></script>
-      <script src='./utils/objectUtils.js'></script>
-      <script src='./utils/utils.js'></script>
-      <script src='./utils/packfileParser.js'></script>
-      <script src='./utils/packfileReader.js'></script>
-      <script src='./utils/streamReader.js'></script>
-      <script src='./utils/reviewHandler.js'></script>
-      <script src='./utils/pageRefresh.js'></script>
-      <script src='./libs/bundleStream.js'></script>
-      <script src='./libs/bundlePackLine.js'></script>
-      <script src='./libs/bundleObject.js'></script>
-      <script src="./libs/openpgp.js"></script>
-      <script src="./libs/sha1.js"></script>
       <meta charset="utf-8">
       <!--link rel="stylesheet" href="css/popup.css">
          <link rel="stylesheet" href="css/sitewide-css.css">
@@ -63,12 +41,11 @@
    <body>
       <div id="popup">
          <div class="form-group">
-            <label id="title-bar" class="control-label" for="parent_info" >Comments</label>
+            <label id="title-bar" class="control-label" for="parent_info" >Comment</label>
             <div class="col-md-4">                     
-               <textarea class="form-control" style="width: 510px; height: 100px;" id="comments" name="comments" spellcheck="false" placeholder="Say something nice..." rows="4" max-rows="15" aria-disabled="false"></textarea>
+               <textarea class="form-control" style="width: 510px; height: 100px;" id="comments" name="comments" spellcheck="false" placeholder="Leave a comment..." rows="4" max-rows="15" aria-disabled="false"></textarea>
                <br>
             </div>
-            <!--label id="title-bar" class="control-label" for="new_changes" >Changes</label-->
             <br>
             <!--div class="col-md-4">                     
                <label id="title-bar" class="control-label" for="commit-msg" >Code Review</label>
@@ -85,7 +62,7 @@
                <button has-tooltip="" class="style-scope gr-reply-dialog x-scope gr-button-0 iron-selected" role="button" tabindex="0" data-value="+2" title="Looks good to me, approved">+2</gr-button>
                </iron-selector>
                </div-->
-            <div class="com-google-gerrit-client-change-Resources-Style-section">
+            <!--div class="com-google-gerrit-client-change-Resources-Style-section">
                <table>
                   <colgroup>
                      <col>
@@ -108,26 +85,79 @@
                      </tr>
                      <tr>
                         <td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_name">Code-Review</td>
-                        <!--td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="on" id="gwt-uid-132" tabindex="0"><label for="gwt-uid-132"></label></span></td-->
                         <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="-2" id="gwt-uid-132" tabindex="0"><label for="gwt-uid-132"></label></span></td>
                         <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="-1" id="gwt-uid-133" tabindex="0"><label for="gwt-uid-133"></label></span></td>
                         <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="0" id="gwt-uid-134" tabindex="0" checked=""><label for="gwt-uid-134"></label></span></td>
                         <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="+1" id="gwt-uid-135" tabindex="0"><label for="gwt-uid-135"></label></span></td>
                         <td><span class="gwt-RadioButton"><input type="radio" name="Code-Review" value="+2" id="gwt-uid-136" tabindex="0"><label for="gwt-uid-136"></label></span></td>
-                        <!--td class="com-google-gerrit-client-change-ReplyBox_BinderImpl_GenCss_style-label_help"><No score></td-->
+
                      </tr>
                   </tbody>
                </table>
-            </div>
+            </div-->
+
+	    <div class="form-checkbox mx-3 mb-2 mt-0">
+	      <label class="d-block">
+		<input type="radio" name="pull_request_review[event]" value="comment" checked="">
+		Comment
+		<p class="text-normal text-gray-light">Submit general feedback without explicit approval.</p>
+	      </label>
+	    </div>
+
+	    <div class="form-checkbox mx-3 my-2">
+		<label class="d-block">
+		<input type="radio" name="pull_request_review[event]" value="approve">
+		Approve
+		  <p class="text-normal text-gray-light">Submit feedback and approve merging these changes.</p>
+	      </label>
+	    </div>
+
+	    <div class="form-checkbox mx-3 my-2">
+		<label class="d-block">
+		<input type="radio" name="pull_request_review[event]" value="reject">
+		Request changes
+		  <p class="text-normal text-gray-light">Submit feedback that must be addressed before merging.</p>
+	      </label>
+	    </div>
+
             <br>
             <div>
-               <button id='publish_review'><b>Post</b></button>
+               <button id='publish_review'><b>Submit Review</b></button>
             </div>
             <div class="form-group" style="text-align: right;clear:left;">
                <a class="btn btn-primary btn-sm"  href="help.html" target="_blank" style="width: 96%" rel="noreferrer">Help</a>
-               <a class="btn btn-primary btn-sm"  href="keyManagement.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
+               <a class="btn btn-primary btn-sm"  href="config/setup.html" target="_blank" style="width: 96%" rel="noreferrer">Settings</a>
             </div>
          </div>
       </div>
+      <!-- scripts
+         ===========================================-->
+      <script src='./signReview.js'></script>
+      <script src='./config/setup.js'></script>
+      <script src='./config/config.js'></script>
+      <script src='./config/constants.js'></script>     
+      <script src='./utils/commit.js'></script>
+      <script src='./utils/commitUtils.js'></script>
+      <script src='./utils/requestHandler.js'></script>
+      <script src='./utils/requestParser.js'></script>
+      <script src='./utils/apiHandler.js'></script>
+      <script src='./utils/objectCreate.js'></script>
+      <script src='./utils/objectPackfile.js'></script>
+      <script src='./utils/objectParser.js'></script>
+      <script src='./utils/objectUtils.js'></script>
+      <script src='./utils/utils.js'></script>
+      <script src='./utils/uiParser.js'></script>
+      <script src='./utils/packfileParser.js'></script>
+      <script src='./utils/packfileReader.js'></script>
+      <script src='./utils/streamReader.js'></script>
+      <script src='./utils/reviewHandler.js'></script>
+      <script src='./utils/pageRefresh.js'></script>
+      <script src='./libs/bundleStream.js'></script>
+      <script src='./libs/bundlePackLine.js'></script>
+      <script src='./libs/bundleObject.js'></script>
+      <script src="./libs/openpgp.js"></script>
+      <script src="./libs/sha1.js"></script>
+      <!-- scripts
+         ===========================================-->
    </body>
 </html>
