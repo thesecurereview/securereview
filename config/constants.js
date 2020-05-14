@@ -41,7 +41,6 @@ const PGP_END = "-----END PGP SIGNATURE-----";
 const RPACK = "git-receive-pack";
 const UPACK = "git-upload-pack";
 
-
 var FILEMODE = {
     "33188": "100644",
     "33261": "100755",
@@ -49,3 +48,11 @@ var FILEMODE = {
     "57344": "160000",
     "16384": "40000"
 }
+
+// TODO: Put a comprehensive regex in place 
+const REGEX_EMAIL =
+    /^[+a-zA-Z0-9_.!#$%&'*\/=?^`{|}~-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z0-9]{2,63}$/;
+//github user regex: https://github.com/shinnn/github-username-regex#user-content-githubusernameregex
+var REGEX_USER_GH = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/;
+//gitlab user regex: https://github.com/gitlabhq/gitlabhq/blob/master/lib/gitlab/path_regex.rb#L130
+var REGEX_USER_GL = /^[a-zA-Z0-9_\-]|[a-zA-Z0-9_]$/;

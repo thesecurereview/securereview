@@ -47,7 +47,6 @@ function setConfig({
 }) {
 
     let {user, repo} = urlInfo
-    console.log(user, repo)
     //let caller = getUserInfo;
     if (server == SERVER_GH) {
         REPO_API = `${API_GH}/repos/${user}/${repo}`;
@@ -60,6 +59,11 @@ function setConfig({
 
     // TODO: Integrate AUTH and AUTHOR
     AUTH = account;
+
+    AUTHOR = {
+        name: account.username,
+        email: `${account.username}@noreply.github.com`
+    }
 }
 
 

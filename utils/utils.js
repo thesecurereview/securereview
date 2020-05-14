@@ -245,6 +245,39 @@ var string_ArrayBuffer = function(str) {
 }
 
 
+// validate regex pattern
+var validatePattern = function(pattern, item) {
+    return pattern.test(item);
+}
+
+
+// validate userId
+var validateGPGuid = function(uid) {
+    // TODO; Check all conditions required by gnupg
+    // https://github.com/gpg/gnupg/blob/master/g10/keygen.c#L2936-#L2962
+
+    let valid = false;
+    let msg = "";
+    if (uid.match(/^\d/)) {
+        return {
+            valid,
+            msg: "Name may not start with a digit"
+        }
+    }
+
+    if (uid.length < 5) {
+        return {
+            valid,
+            msg: "Name must be at least 5 characters long"
+        }
+    }
+
+    return {
+        valid: true
+    }
+}
+
+
 // Message Handler
 function errorHandler({
     msg,

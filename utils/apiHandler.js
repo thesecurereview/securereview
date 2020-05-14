@@ -98,3 +98,20 @@ function getPRSummary({
         callback(response);
     });
 }
+
+
+// Compare the head of a branch
+function getCommit({
+    user,
+    repo,
+    commit
+}, callback) {
+    let endpoint = `${API_GH}/repos/${user}/${repo}/commits/${commit}`;
+    singleAPICall({
+        endpoint
+    }, ({
+        response
+    }) => {
+        callback(response);
+    });
+}

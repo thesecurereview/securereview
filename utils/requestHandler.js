@@ -1,7 +1,8 @@
 //HTTPBasic
 function basicAuth(auth) {
     //FIXME Add OAuth
-    return "Basic " + btoa(auth.username + ':' + auth.password)
+    //return "Basic " + btoa(auth.username + ':' + auth.password)
+    return "Basic " + btoa(auth.username + ':' + auth.token)   
 }
 
 
@@ -93,120 +94,12 @@ function pifyRequest(method, repo_url, headers, resType, body, callback) {
 }
 
 
-// GET request over an endpoint
-function get_endpoint({
-    endpoint,
-    auth,
-    resType
-}, callback) {
-
-    let headers = {}
-    if (auth) {
-        headers['Authorization'] = basicAuth(auth)
-    }
-    headers['Accept'] = `application/json`
-
-    request("GET", endpoint, headers, function(res) {
-        callback(res.body)
-    });
-}
-
-
-// PUT/POST request over an endpoint
-function post_endpoint({
-    auth,
-    data,
-    method,
-    endpoint,
-    contentType
-}, callback) {
-
-    let headers = {}
-    if (auth) {
-        headers['Authorization'] = basicAuth(auth);
-    }
-    if (contentType) {
-        headers['Content-Type'] = contentType;
-    }
-    headers['Accept'] = `application/json`;
-
-    pifyRequest(
-        method,
-        endpoint,
-        headers,
-        null, //resType=null 
-        data,
-        (res) => {
-            callback(res);
-        }
-    );
-}
-
-
-// GET request by service
-function get_req(repo_url, service, auth, callback) {
-
-    if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
-
-    let headers = {}
-    if (auth) {
-        headers['Authorization'] = basicAuth(auth);
-    }
-
-    repo_url = `${repo_url}/info/refs?service=${service}`;
-
-    request("GET", repo_url, headers, (res) => {
-        if (res.statusCode !== 200) {
-            throw new Error(
-                `HTTP Error: ${res.statusCode} ${res.statusMessage}`)
-        }
-	// parse the response and then callback
-        callback(parseGETResponse(res.body, service));
-    })
-}
-
-
-// POST request by service
-var post_req = async function(repo_url, service, auth, stream, callback) {
-
-    if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'
-
-    let headers = {}
-    headers['Content-Type'] = `application/x-${service}-request`
-    headers['Accept'] = `application/x-${service}-result`
-
-    if (auth) {
-        headers['Authorization'] = basicAuth(auth)
-    }
-
-    let conStream = concatStreamBuffer(stream)
-
-    repo_url = `${repo_url}/${service}`
-
-    pifyRequest(
-        "POST",
-        repo_url,
-        headers,
-        "arraybuffer",
-        conStream,
-        (res) => {
-            if (res.statusCode !== 200) {
-                throw new Error(`HTTP Error: `)
-            }
-            //parse the response and then callback
-            callback(res.body)
-        }
-    );
-
-}
-
-
 // Send the pack file to the server
 var connect = async function({
-    service,
-    repo_url,
     auth,
-    stream
+    service,
+    stream,
+    repo_url
 }, callback) {
 
     if (!repo_url.endsWith('.git')) repo_url = repo_url += '.git'

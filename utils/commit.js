@@ -32,9 +32,8 @@ function prepareCommit({
 // Create a sign commit object
 function createSignedCommit(commitInfo, callback) {
     let commit = formCommit(commitInfo);
-
     // Sing the commit and then form signed commit
-    signContent(authUsername, commit, (result) => {
+    signContent(commit, (result) => {
 
         // Take the commit signature
         // Since the commitMessage itself has signature
