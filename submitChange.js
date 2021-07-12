@@ -12,78 +12,77 @@ var commitInfo;
  */
 function run(url) {
 
-    // Get change number
-    var cn = getChangeNumber(url)
-    // Get a summary of change
-    getChangeSummary(cn, (result) => {
-        // Cache some info to use later
-        commitInfo = result;
+    // Do the config per PR 
+    preConfig(url, (urlInfo) => {
 
-        let project = result.project;
-        let branch = result.branch;
-        let change_id = result.change_id;
-        let changeNumber = result._number
+        //Get the summary of PR
+        let prId = urlInfo.prId;
+        getPRSummary({prId}, (prInfo) =>{
+            // Check if pr is created in a fork repo 
+            let prRepo = prInfo.head.repo
+            prRepo = prRepo ? prRepo.name : urlInfo.repo 
+            let prBranch = prInfo.head.ref
+            let prHead = prInfo.head.sha
+            let prUser = prInfo.head.user.login
 
-        //TODO: sync the following API calls
-        // Get info: change branch
-        getRevisionReview(change_id, "current", (changeInfo) => {
-            //Get the number of patches in the change branch
-            revisions = getObjetValues(changeInfo.revisions)[0]._number;
+            getPRCommits({prId}, (prCommits) =>{
+		// Last commit in prCommits is the head of the PR branch 
+		//Start  from end
+		prCommits.reverse()
 
-            //Get commits in the change branch
-            let urls = formRevisionUrls(change_id, revisions);
-            multiFetch({
-                urls,
-                parser: revisionParser
-            }, ({
-                data
-            }) => {
-                // Form Commit objects in the change branch
-                // All new commits should be part of the packfile
-                let revCommits = getObjetValues(data)
-                let commitObjects = createRevisionCommits(revCommits);
+                let reviewUnits = []
+                //let commitMessages = {}
+                for (commit of prCommits){
+	               /* let commitId = commit.sha
+	                let commitMessage = commit.commit.message
+	                commitMessages[commitId] = commitMessage*/
 
-                //ExtractReviews from the commit message
-                let commitMessage = formCommitMessage(revCommits);
-                //Amend change ID to the commit message
-                commitMessage = `Merge #${changeNumber}: ${
-			commitInfo.subject}\n\n${
-			commitMessage}Change-Id: ${change_id}`;
+			//Go to the first RU
+			let reviewUnit = extractReviewUnit(commit.commit.message)
+			if (isFirstReviewUnit(reviewUnit) === false){
+				reviewUnits.push(reviewUnit)
+				//break;
+			}
+			
+		}
 
-                // Get info about the target branch
-                getBranchInfo(project, branch, (targetInfo) => {
+		//Validate the signatures
+		validateReviewUnits(reviewUnit, result =>{
+			//Integrate RUs using the option
+			let integrateOption = "Full"; //"Compact"
+			let commitMessage = integrateReviewUnits(reviewUnits, integrateOption)
 
-                    // Populate the parent window
-                    setParentInfo(targetInfo);
+			//Prepare the new commit: Amending the pending branch
+			prepareCommit({
+			    parents: [prHead],
+			    treeHash: commit.commit.tree.sha,
+			    commitMessage: reviewUnit
+			}, (commit) => {		
+			    // Create the new commit (amend review to commit message)
+			    let type = TYPE_COMMIT;
+			    let obj = createGitObject(type, commit);
+			    let objects = [];
+			    objects.push([type, obj.object]);
 
-                    // Form parents, Common ancestor is parent of the 1st revision
-                    let {
-                        parents
-                    } = formParents(changeInfo, data[1], targetInfo);
-
-                    // Run the merge process
-                    runMergeProcess(change_id, project, parents,
-                        (treeHash, objects) => {
-                            //Update new objects
-                            finalObjects = [...objects, ...commitObjects]
-                            //Form parents to create commit
-                            parents = [parents.targetHead, parents.changeHead]
-                            commitInfo["parents"] = parents;
-
-                            prepareCommit({
-                                parents,
-                                treeHash,
-                                commitMessage
-                            });
-                        });
-                });
-
+			    pushObjects({
+			        branch: prBranch,
+			        oldHead: prHead,
+			        newHead: obj.id,
+			        repo_url: REPO_URL,
+			        objects
+			    },
+			    (result) => {
+			        //TODO: Prase the response and take action
+			        //parseSendPackResult (result)
+			        console.log(result);
+			    });
+		      });
+		});
             });
-
         });
-
     });
 }
+
 
 function pushCommit() {
 

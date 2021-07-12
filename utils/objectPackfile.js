@@ -34,7 +34,8 @@ var pushObjects = function({
         outputStream: packstream
     })
 
-    console.log(branch,oldHead, newHead, repo_url, AUTH, packstream)
+    // FIXME: Minor issue here
+    //console.log(branch,oldHead, newHead, repo_url, AUTH, packstream)
     // POST using request
     connect({
         auth: AUTH,

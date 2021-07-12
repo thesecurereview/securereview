@@ -107,7 +107,6 @@ function formSignedCommit(commit, signature) {
 
 // Extract the commit's signature
 function isolateSignature(commit) {
-
     // Take the last signature as the commit signature
     // TODO: Make sure it does not go wrong
     let signature = commit.slice(

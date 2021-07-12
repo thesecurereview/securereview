@@ -100,13 +100,25 @@ function getPRSummary({
 }
 
 
-// Compare the head of a branch
+// get the commit
 function getCommit({
-    user,
-    repo,
     commit
 }, callback) {
-    let endpoint = `${API_GH}/repos/${user}/${repo}/commits/${commit}`;
+    let endpoint = `${REPO_API}/commits/${commit}`;
+    singleAPICall({
+        endpoint
+    }, ({
+        response
+    }) => {
+        callback(response);
+    });
+}
+
+// get the commit
+function getPRCommits({
+    prId
+}, callback) {
+    let endpoint = `${REPO_API}/pulls/${prId}/commits`;
     singleAPICall({
         endpoint
     }, ({

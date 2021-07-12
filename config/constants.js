@@ -37,6 +37,7 @@ const TYPE_TREE = "tree";
 const PGP_SIG = "gpgsig";
 const PGP_START = "-----BEGIN PGP SIGNATURE-----";
 const PGP_END = "-----END PGP SIGNATURE-----";
+const PGP_MSG = `-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA256`
 
 const RPACK = "git-receive-pack";
 const UPACK = "git-upload-pack";
