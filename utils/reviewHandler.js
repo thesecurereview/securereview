@@ -5,16 +5,8 @@
  *	<reviewer's name> <reviewer's e-mail> <timestamp> if commit is not signed
  */
 
- //Embed the signed review in the commitMessage
-function embedReviewUnit(commitMessage, reviewUnit, reviewer) {
-    return `${commitMessage}\nReview-Score: ${reviewUnit}\n${
-		reviewer.name} <${reviewer.email}>`
-}
-
-
 // Extract the review information: comments, score
 function captureReview() {
-
     let comments = document.getElementById('comments').value;
     //let score = document.querySelector('input[name = "Code-Review"]:checked').value;
     let score = document.querySelector('input[name = "pull_request_review"]:checked').value;
@@ -25,33 +17,67 @@ function captureReview() {
     };
 }
 
-
 // From a signed review unit to store the reviews
 function signReviewUnit({
-    review,
-    reviewer,
-    preSignature
+    preSignature,
+    reviewInfo
 }, callback) {
     // Embed review in the original commit message
-    let reviewUnit = `${preSignature}\nReview-Score: ${review.score}\n${
-		reviewer.name} <${reviewer.email}>`;
+    let reviewUnit = `${preSignature}\n${reviewInfo}`;
 
     // Sign review
-    signContent(reviewUnit, function(result) {
+    signContent(reviewUnit, (result)=> {
         callback(result);
     });
 }
 
-// Extract the commit's signature
-function isolateReviewUnitInfo(commit) {
+//Embed the signed review in the commitMessage
+function formCommitMessage(orgCommitMsg, reviewInfo, reviewSignature) {
+    return `${orgCommitMsg}${reviewInfo}\n${reviewSignature}`
+}
 
-    // Take the last signature as the commit signature
-    // TODO: Make sure it does not go wrong
-    let signature = commit.slice(
-        commit.lastIndexOf(`${PGP_START}`),
-        commit.lastIndexOf(`${PGP_END}`) +
-        `${PGP_END}`.length
+
+function getOriginalCommitMessage(commitMessage){
+	let prefix = "Review-Score:"
+	return commitMessage.slice(
+		0, commitMessage.lastIndexOf(prefix) -1
+    		)
+}
+
+
+function extractReviewUnit(commitMessage){
+	//FIXME Make sure the slice is correct
+	
+	//Check if there is a review unit
+	let prefix = "Review-Score:"
+	if (commitMessage.indexOf(prefix) == -1)
+	    return {
+		review:""
+	}
+
+    let reviewInfo = commitMessage.slice(
+	commitMessage.lastIndexOf(prefix),
+        commitMessage.lastIndexOf(`${PGP_START}`)
     )
 
-    return outdent(signature)
+    let signature = commitMessage.slice(
+        commitMessage.lastIndexOf(`${PGP_START}`),
+        commitMessage.lastIndexOf(`${PGP_END}`) +
+        `${PGP_END}`.length
+    )
+    return {
+	reviewInfo,
+	signature: outdent(signature)
+	}
 }
+
+function isFirstReviewUnit(reviewUnit){
+	if (reviewUnit.review == "") return true
+	return false	
+}
+
+
+function integrateReviewUnits(reviewUnits, option){
+	return "Test Message"
+}
+

@@ -10,6 +10,7 @@ var url;
 
 // Perform the signing review
 function run() {
+    let t1 = performance.now();//before creating commit
     // Get the review
     let review = captureReview();
 
@@ -18,6 +19,7 @@ function run() {
 
         //Get the summary of PR
         getPRSummary({prId: urlInfo.prId}, (prInfo) =>{
+            //console.log(prInfo)
             // Check if pr is created in a fork repo 
             let prRepo = prInfo.head.repo
             prRepo = prRepo ? prRepo.name : urlInfo.repo 
@@ -26,35 +28,39 @@ function run() {
             let prUser = prInfo.head.user.login
 
             //Get PR head commit
-            getCommit({user:prUser, repo:prRepo, commit:prHead}, (commit) => {
+            getCommit({commit:prHead}, (commit) => {
                 //console.log(commit)
                 let commitMessage = commit.commit.message
 		let reviewer = {
 			name : "Test",
 			email: "test@example.com"
 		}
+		let preSignature = isolateSignature(commitMessage)
+		let reviewInfo = `\nReview-Score: ${review.score}\n${
+				reviewer.name} <${reviewer.email}>`
 
+    		let t2 = performance.now();//before creating commit
                 // Store signed review in the PR branch FIXME: PreSignature
                 signReviewUnit({
-                    review,
-                    reviewer:AUTHOR,
-                    preSignature,
-                }, (reviewUnit) => {
-		        //console.log(reviewUnit)
-		        reviewUnit = embedReviewUnit (commitMessage, reviewUnit, reviewer)
-
+                    //preSignature,
+                    reviewInfo
+                }, (signedData) => {console.log(signedData)
+			let reviewSignature = isolateSignature(signedData)
+			let orgCommitMsg = getOriginalCommitMessage (commitMessage)
+		        commitMessage = formCommitMessage (orgCommitMsg, reviewInfo, reviewSignature);console.log(commitMessage)
 		        //Prepare the new commit: Amending the pending branch
 		        prepareCommit({
 		            parents: [prHead],
 		            treeHash: commit.commit.tree.sha,
-		            commitMessage: reviewUnit
-		        }, (commit) => {		
+		            commitMessage
+		        }, (commit) => {
 		            // Create the new commit (amend review to commit message)
 		            let type = TYPE_COMMIT;
 		            let obj = createGitObject(type, commit);
 		            let objects = [];
 		            objects.push([type, obj.object]);
 
+    			    let t3 = performance.now();//before creating packfile
 		            pushObjects({
 		                branch: prBranch,
 		                oldHead: prHead,
@@ -63,15 +69,14 @@ function run() {
 		                objects
 		            },
 		            (result) => {
+				t4 = performance.now();//after creating packfile
 				measureTime(t1, t2, t3, t4)
 		                //TODO: Prase the response and take action
 		                //parseSendPackResult (result)
 		                //console.log(result);
 		            });
 		        });
-
                 })
-
 
             })
         });
