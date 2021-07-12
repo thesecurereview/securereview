@@ -6,8 +6,9 @@
  */
 
  //Embed the signed review in the commitMessage
-function embedReviewUnit(commitMessage, review) {
-    return `${commitMessage}\nReview-Score: ${review.score}\n`
+function embedReviewUnit(commitMessage, reviewUnit, reviewer) {
+    return `${commitMessage}\nReview-Score: ${reviewUnit}\n${
+		reviewer.name} <${reviewer.email}>`
 }
 
 
@@ -22,4 +23,35 @@ function captureReview() {
         comments,
         score
     };
+}
+
+
+// From a signed review unit to store the reviews
+function signReviewUnit({
+    review,
+    reviewer,
+    preSignature
+}, callback) {
+    // Embed review in the original commit message
+    let reviewUnit = `${preSignature}\nReview-Score: ${review.score}\n${
+		reviewer.name} <${reviewer.email}>`;
+
+    // Sign review
+    signContent(reviewUnit, function(result) {
+        callback(result);
+    });
+}
+
+// Extract the commit's signature
+function isolateReviewUnitInfo(commit) {
+
+    // Take the last signature as the commit signature
+    // TODO: Make sure it does not go wrong
+    let signature = commit.slice(
+        commit.lastIndexOf(`${PGP_START}`),
+        commit.lastIndexOf(`${PGP_END}`) +
+        `${PGP_END}`.length
+    )
+
+    return outdent(signature)
 }

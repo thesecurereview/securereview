@@ -100,7 +100,7 @@ function getPRSummary({
 }
 
 
-// Compare the head of a branch
+// get the commit
 function getCommit({
     user,
     repo,

@@ -56,3 +56,21 @@ const REGEX_EMAIL =
 var REGEX_USER_GH = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/;
 //gitlab user regex: https://github.com/gitlabhq/gitlabhq/blob/master/lib/gitlab/path_regex.rb#L130
 var REGEX_USER_GL = /^[a-zA-Z0-9_\-]|[a-zA-Z0-9_]$/;
+
+//FIXME: Replace the following sample signature with the one
+// created on the fly
+let preSignature = `
+-----BEGIN PGP SIGNATURE-----
+Version: OpenPGP.js v2.1.0
+Comment: http://openpgpjs.org
+
+wsBcBAEBCAAQBQJfGek+CRBB/O9vbKYzggAAG8UH/jtmRGlxy+2XxPiYaonv
+VesCkKRYSE/UrFsB9GzqmJ6LenuqS1lVU+bntfi5BSeoFnjmUKnzk8A59HC0
+cBuCAMfYQIuVlmdO/PQEyetwp7Naz+T7H0iYO1DatS0Aqmy6gY/CXUUG5HGr
+rcMfXq00zvSAK/cAIMB44TfMiT6C2fkTx/rVdYsH6sRKb5neF/+Tn2uTIaid
+iEK+ZWZqxLQr4NuL6q104Gfk+MPesO6LFE5Cxu/o7atfvvZdfEh3mpUUngyN
+VB6+Luj73X8mUQ0zusmrvgQ7ndZ9JPVRVmoIyVq1TybTRWVWZnfc0cE/+WlG
+WKzU85cdHtQDwYFFUIIc1dc=
+=0W95
+-----END PGP SIGNATURE-----
+`;
