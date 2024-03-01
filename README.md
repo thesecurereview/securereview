@@ -62,10 +62,8 @@ Version 2.0 that can be found in the
 [LICENSE](https://github.com/thesecurereview/securereview/blob/master/LICENSE) file.
 
 
-<!--## Website
-
-https://securereview.github.io/-->
-
+## Website
+https://thesecurereview.github.io
 
 ## About
 
